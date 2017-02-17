@@ -1,6 +1,4 @@
-package GithubEntities;
-
-import com.sun.xml.internal.bind.v2.TODO;
+package model;
 
 /**
  * Created by sarra on 15/02/17.

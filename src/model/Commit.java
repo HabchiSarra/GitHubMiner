@@ -1,4 +1,4 @@
-package GithubEntities;
+package model;
 
 import java.util.ArrayList;
 import java.util.Date;

@@ -1,4 +1,4 @@
-package GithubEntities;
+package model;
 
 import java.util.ArrayList;
 
@@ -62,5 +62,21 @@ public class Developer {
 
     public void addAuthoredCommit(Commit commit){
         this.authoredCommits.add(commit);
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (!(o instanceof Developer)) return false;
+
+        Developer developer = (Developer) o;
+
+        if (login != null ? !login.equals(developer.login) : developer.login != null) return false;
+        return ID.equals(developer.ID);
+    }
+
+    @Override
+    public int hashCode() {
+        return ID.hashCode();
     }
 }
