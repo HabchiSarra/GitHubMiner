@@ -15,17 +15,16 @@ public class Developer {
 
 
 
-    private Developer(String login, Long ID, String mail) {
+    private Developer(String login, Long ID) {
         this.login = login;
         this.ID = ID;
-        this.mail=mail;
         this.repositories=new ArrayList<>();
         this.commits=new ArrayList<>();
         this.authoredCommits=new ArrayList<>();
     }
 
-    public static Developer createDeveloper(String login, Long ID, String mail){
-        return new Developer(login,ID,mail);
+    public static Developer createDeveloper(String login, Long ID){
+        return new Developer(login,ID);
     }
     public String getLogin() {
         return login;
@@ -78,5 +77,18 @@ public class Developer {
     @Override
     public int hashCode() {
         return ID.hashCode();
+    }
+
+    public void print(){
+        System.out.println("login: "+ this.login);
+        System.out.println("id: "+this.ID);
+    }
+
+    public String getMail() {
+        return mail;
+    }
+
+    public void setMail(String mail) {
+        this.mail = mail;
     }
 }

@@ -1,3 +1,5 @@
+import model.FileStatus;
+
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
@@ -13,7 +15,7 @@ public class Converter {
 
     public static Date getDate(String dateString){
 
-        SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'");
+        SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss'Z'");
 
         Date date =new Date();
         try {
@@ -46,5 +48,16 @@ public class Converter {
             }
         }
         return sb.toString();
+    }
+
+    public static FileStatus convertDataToFileStatus(String statusString){
+
+        if(statusString.toLowerCase().equals("removed")){
+            return FileStatus.REMOVED;
+        }else if(statusString.toLowerCase().equals("modified")){
+            return FileStatus.MODIFIED;
+        }else{
+            return FileStatus.ADDED;
+        }
     }
 }

@@ -5,16 +5,17 @@ package model;
  */
 public class FileModification {
 
-    int additions;
-    int deletions;
-    String patch;
-    String fileName;
-    String status;  //TODO what are the types?
+    private int additions;
+    private int deletions;
+    private String patch;
+    private String fileName;
+    private FileStatus status;
+    private String sha;
 
-    public FileModification(int additions, int deletions, String patch, String fileName, String status) {
+    public FileModification(int additions, int deletions, String fileName, FileStatus status, String sha) {
         this.additions = additions;
         this.deletions = deletions;
-        this.patch = patch;
+        this.sha =sha;
         this.fileName = fileName;
         this.status = status;
     }
@@ -51,11 +52,19 @@ public class FileModification {
         this.fileName = fileName;
     }
 
-    public String getStatus() {
+    public FileStatus getStatus() {
         return status;
     }
 
-    public void setStatus(String status) {
+    public void setStatus(FileStatus status) {
         this.status = status;
+    }
+
+    public String getSha() {
+        return sha;
+    }
+
+    public void setSha(String sha) {
+        this.sha = sha;
     }
 }

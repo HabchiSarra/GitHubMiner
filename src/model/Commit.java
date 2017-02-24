@@ -110,4 +110,15 @@ public class Commit {
     public void addFileModification(FileModification fileModification) {
         this.fileModifications.add(fileModification);
     }
+
+    public void print(){
+        System.out.println("sha: "+this.sha);
+        System.out.println("message: "+this.message);
+        System.out.println("commit date: "+this.commitDate.toString());
+        System.out.println("authoring date: "+this.authoringDate.toString());
+        System.out.println("committer: ");
+        System.out.println("+++++++++++++++++++++++++++++++++++++++");
+        this.commiter.print();
+        System.out.println("+++++++++++++++++++++++++++++++++++++++");
+    }
 }

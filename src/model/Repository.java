@@ -17,6 +17,7 @@ public class Repository {
     private Date commitDate;
     private Date pushDate;
     private ArrayList<Commit> commits;
+    private Long ID;
 
 
 
@@ -86,15 +87,16 @@ public class Repository {
         this.pushDate = pushDate;
     }
 
-     public static Repository createRepository(String name, Developer owner, String description, int stargazersCount,int watchersCount, Date commitDate,
+     public static Repository createRepository(Long ID, String name, Developer owner, String description, int stargazersCount,int watchersCount, Date commitDate,
                                        Date pushDate ){
-        Repository repository=new Repository(name,owner,description,stargazersCount,watchersCount,commitDate,pushDate);
+        Repository repository=new Repository(ID,name,owner,description,stargazersCount,watchersCount,commitDate,pushDate);
         owner.addRepository(repository);
         return repository;
     }
 
-    private Repository(String name, Developer owner, String description, int stargazersCount,int watchersCount, Date commitDate,
+    private Repository(Long ID, String name, Developer owner, String description, int stargazersCount,int watchersCount, Date commitDate,
                       Date pushDate ) {
+        this.ID=ID;
         this.name = name;
         this.owner = owner;
         this.contributors=new ArrayList<>();
@@ -115,4 +117,51 @@ public class Repository {
         this.contributors.add(developer);
     }
 
+    public void print(){
+        System.out.println("______________________________________________________________________");
+        System.out.println("ID : "+ this.ID);
+        System.out.println("name: "+ this.name);
+        System.out.println("description: "+this.description);
+        System.out.println("commit date: "+ this.commitDate.toString());
+        System.out.println("owner: ");
+        System.out.println("+++++++++++++++++++++++++++++++++++++++");
+        this.owner.print();
+        System.out.println("+++++++++++++++++++++++++++++++++++++++");
+
+        System.out.println("Commits: ");
+        for(Commit commit:this.commits){
+            System.out.println("***************************************");
+            commit.print();
+            System.out.println("***************************************");
+        }
+        System.out.println("______________________________________________________________________");
+    }
+
+    public ArrayList<Developer> getCollaborators() {
+        return collaborators;
+    }
+
+    public void addCollaborator(Developer collaborator) {
+        this.collaborators.add(collaborator) ;
+    }
+
+    public void setCollaborators(ArrayList<Developer> collaborators) {
+        this.collaborators = collaborators;
+    }
+
+    public Long getID() {
+        return ID;
+    }
+
+    public void setID(Long ID) {
+        this.ID = ID;
+    }
+
+    public ArrayList<Developer> getContributors() {
+        return contributors;
+    }
+
+    public ArrayList<Commit> getCommits() {
+        return commits;
+    }
 }

@@ -1,7 +1,4 @@
-import model.Commit;
-import model.Developer;
-import model.FileModification;
-import model.Repository;
+import model.*;
 import org.apache.http.HttpEntity;
 import org.apache.http.HttpResponse;
 import org.apache.http.client.ClientProtocolException;
@@ -9,6 +6,7 @@ import org.apache.http.client.HttpClient;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.impl.client.DefaultHttpClient;
 import org.json.JSONArray;
+import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.io.IOException;
@@ -32,8 +30,9 @@ public class Fetcher {
     public  Repository getRepository(String link){
         String result=getData(link);
         JSONObject jsonObject = new JSONObject(result);
-        System.out.println(jsonObject.toString());
+        //System.out.println(jsonObject.toString());
         String name = jsonObject.getString("name");
+        Long ID = jsonObject.getLong("id");
         String description = jsonObject.getString("description");
 
         String createdAt= jsonObject.getString("created_at");
@@ -43,8 +42,13 @@ public class Fetcher {
         int stargazersCount=jsonObject.getInt("stargazers_count");
         int watchersCount=jsonObject.getInt("watchers_count");
         JSONObject ownerJson= jsonObject.getJSONObject("owner");
-        Developer owner=Developer.createDeveloper(ownerJson.getString("login"),ownerJson.getLong("id"),ownerJson.getString("url"));
-        Repository repository=Repository.createRepository(name,owner,description,stargazersCount,watchersCount,commitDate,pushDate);
+        Developer owner=Developer.createDeveloper(ownerJson.getString("login"),
+                ownerJson.getLong("id"));
+        owner.setMail(ownerJson.getString("url"));
+        Repository repository=Repository.createRepository(ID, name,owner,description,
+                stargazersCount,watchersCount,commitDate,pushDate);
+       // getRepoCommits(repository);
+//         repository.setCollaborators(getCollaborators(repository));
         return repository;
     }
 
@@ -62,13 +66,13 @@ public class Fetcher {
             if (entity != null) {
                 InputStream instream = entity.getContent();
                 result = Converter.convertStreamToString(instream);
-                System.out.println("RESULT:: "+ result);
+                //System.out.println("RESULT:: "+ result);
                 instream.close();
             }
             // Headers
             org.apache.http.Header[] headers = response.getAllHeaders();
             for (int i = 0; i < headers.length; i++) {
-                System.out.println(headers[i]);
+                //System.out.println(headers[i]);
             }
         } catch (ClientProtocolException e1) {
             e1.printStackTrace();
@@ -87,7 +91,7 @@ public class Fetcher {
         Iterator<Object> iterator=jsonArray.iterator();
         while(iterator.hasNext()){
             jsonObject=(JSONObject) iterator.next();
-            System.out.println("Object "+i+" : "+jsonObject.toString());
+            //System.out.println("Object "+i+" : "+jsonObject.toString());
             i++;
         }
         return developers;
@@ -115,19 +119,19 @@ public class Fetcher {
         String link = "https://api.github.com/repos/"+repository.getOwner().getLogin()+"/"+repository.getName()+"/commits"+"/"+sha;
         String result=getData(link);
         JSONObject jsonObject = new JSONObject(result);
-        String message =jsonObject.getString("message");
+        String message =jsonObject.getJSONObject("commit").getString("message");
         JSONObject jsonAuthor=jsonObject.getJSONObject("author");
         JSONObject jsonCommitter=jsonObject.getJSONObject("committer");
         Developer author;
         Developer committer;
-        author=Developer.createDeveloper(jsonAuthor.getString("login"),jsonAuthor.getLong("id"), jsonAuthor.getString("mail"));
+        author=Developer.createDeveloper(jsonAuthor.getString("login"),jsonAuthor.getLong("id"));
         if(!(jsonAuthor.getLong("id")== jsonCommitter.getLong("id"))){
-            committer= Developer.createDeveloper(jsonCommitter.getString("login"),jsonCommitter.getLong("id"), jsonCommitter.getString("mail"));
+            committer= Developer.createDeveloper(jsonCommitter.getString("login"),jsonCommitter.getLong("id"));
         }else{
             committer=author;
         }
-        String d1 =jsonAuthor.getString("date");
-        String d2 =jsonCommitter.getString("date");
+        String d1 =jsonObject.getJSONObject("commit").getJSONObject("author").getString("date");
+        String d2 =jsonObject.getJSONObject("commit").getJSONObject("committer").getString("date");
         Date authoringDate =Converter.getDate(d1);
         Date commitDate=Converter.getDate(d2);
         Commit commit=Commit.createCommit(sha,author,committer,message,authoringDate,commitDate, repository);
@@ -138,12 +142,21 @@ public class Fetcher {
         Iterator<Object> iterator=jsonFiles.iterator();
         while(iterator.hasNext()){
             jsonFile=(JSONObject) iterator.next();
+            fileName=jsonFile.getString("filename");
+            //System.out.println("File name : "+fileName);
             additions=jsonFile.getInt("additions");
             deletions=jsonFile.getInt("deletions");
-            patch = jsonFile.getString("patch");
-            fileName=jsonFile.getString("filename");
             status=jsonFile.getString("status");
-            commit.addFileModification(new FileModification(additions,deletions,patch,fileName,status));
+            FileStatus fileStatus= Converter.convertDataToFileStatus(status);
+            try{
+                patch = jsonFile.getString("patch");
+            }catch (JSONException jsonException){
+                jsonException.printStackTrace();
+            }
+            String shaFile =jsonFile.getString("sha");
+
+            commit.addFileModification(new FileModification(additions,deletions,fileName,fileStatus,shaFile));
+
         }
         return commit;
     }
@@ -158,8 +171,10 @@ public class Fetcher {
         Iterator<Object> iterator=jsonArray.iterator();
         while(iterator.hasNext()){
             jsonObject=(JSONObject) iterator.next();
+
+
             collaborators.add(Developer.createDeveloper(jsonObject.getString("login"),
-                    jsonObject.getLong("id"),jsonObject.getString("mail")));
+                    jsonObject.getLong("id")));
         }
         return collaborators;
     }
