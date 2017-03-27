@@ -37,8 +37,8 @@ public class Fetcher {
 
         String createdAt= jsonObject.getString("created_at");
         String pushed_at=jsonObject.getString("pushed_at");
-        Date commitDate=Converter.getDate(createdAt);
-        Date pushDate=Converter.getDate(pushed_at);
+        Date commitDate=Converter.stringToDate(createdAt);
+        Date pushDate=Converter.stringToDate(pushed_at);
         int stargazersCount=jsonObject.getInt("stargazers_count");
         int watchersCount=jsonObject.getInt("watchers_count");
         JSONObject ownerJson= jsonObject.getJSONObject("owner");
@@ -47,8 +47,11 @@ public class Fetcher {
         owner.setMail(ownerJson.getString("url"));
         Repository repository=Repository.createRepository(ID, name,owner,description,
                 stargazersCount,watchersCount,commitDate,pushDate);
-       // getRepoCommits(repository);
-//         repository.setCollaborators(getCollaborators(repository));
+        getRepoCommits(repository);
+        repository.setCollaborators(getCollaborators(repository));
+        getIssues(repository);
+
+        System.out.println("Hola !! ");
         return repository;
     }
 
@@ -57,23 +60,27 @@ public class Fetcher {
         HttpGet request = new HttpGet(link);
         request.addHeader("Authorization"," token "+token);
         HttpResponse response;
-
+        int statusCode;
         String result = null;
         try {
             response = client.execute(request);
+            statusCode =response.getStatusLine().getStatusCode();
+            if(statusCode !=200){
+                return null;
+            }
             HttpEntity entity = response.getEntity();
 
             if (entity != null) {
                 InputStream instream = entity.getContent();
-                result = Converter.convertStreamToString(instream);
+                result = Converter.streamToString(instream);
                 //System.out.println("RESULT:: "+ result);
                 instream.close();
             }
             // Headers
-            org.apache.http.Header[] headers = response.getAllHeaders();
-            for (int i = 0; i < headers.length; i++) {
-                //System.out.println(headers[i]);
-            }
+//            org.apache.http.Header[] headers = response.getAllHeaders();
+//            for (int i = 0; i < headers.length; i++) {
+//                //System.out.println(headers[i]);
+//            }
         } catch (ClientProtocolException e1) {
             e1.printStackTrace();
         } catch (IOException e1) {
@@ -82,37 +89,20 @@ public class Fetcher {
         return result;
     }
 
-    public  ArrayList<Developer> getDevelopers(String link){
-        ArrayList<Developer> developers=new ArrayList<>();
-        String result =getData(link);
-        JSONArray jsonArray= new JSONArray(result);
-        JSONObject jsonObject;
-        int i= 0;
-        Iterator<Object> iterator=jsonArray.iterator();
-        while(iterator.hasNext()){
-            jsonObject=(JSONObject) iterator.next();
-            //System.out.println("Object "+i+" : "+jsonObject.toString());
-            i++;
-        }
-        return developers;
-    }
 
-
-    public  ArrayList<Commit> getRepoCommits(Repository repository){
+    public void  getRepoCommits(Repository repository){
         String link = "https://api.github.com/repos/"+repository.getOwner().getLogin()+"/"+repository.getName()+"/commits";
         String result=getData(link);
         JSONArray jsonArray=new JSONArray(result);
         JSONObject jsonObject;
         String sha;
-        ArrayList<Commit> commitList =new ArrayList<>();
         Iterator<Object> iterator=jsonArray.iterator();
         while(iterator.hasNext()){
             jsonObject=(JSONObject) iterator.next();
             sha=jsonObject.getString("sha");
-            commitList.add(getCommit(repository,sha));
+            getCommit(repository,sha);
         }
 
-        return commitList;
     }
 
     public  Commit getCommit(Repository repository, String sha){
@@ -132,8 +122,8 @@ public class Fetcher {
         }
         String d1 =jsonObject.getJSONObject("commit").getJSONObject("author").getString("date");
         String d2 =jsonObject.getJSONObject("commit").getJSONObject("committer").getString("date");
-        Date authoringDate =Converter.getDate(d1);
-        Date commitDate=Converter.getDate(d2);
+        Date authoringDate =Converter.stringToDate(d1);
+        Date commitDate=Converter.stringToDate(d2);
         Commit commit=Commit.createCommit(sha,author,committer,message,authoringDate,commitDate, repository);
         //Getting files
         JSONArray jsonFiles =jsonObject.getJSONArray("files");
@@ -147,7 +137,7 @@ public class Fetcher {
             additions=jsonFile.getInt("additions");
             deletions=jsonFile.getInt("deletions");
             status=jsonFile.getString("status");
-            FileStatus fileStatus= Converter.convertDataToFileStatus(status);
+            FileStatus fileStatus= Converter.stringToFileStatus(status);
             try{
                 patch = jsonFile.getString("patch");
             }catch (JSONException jsonException){
@@ -166,17 +156,74 @@ public class Fetcher {
         ArrayList<Developer> collaborators =new ArrayList<>();
         String link ="https://api.github.com/repos/"+repository.getOwner().getLogin()+"/"+repository.getName()+"/collaborators";
         String result =getData(link);
+        if(result == null){
+            return collaborators;
+        }
         JSONArray jsonArray= new JSONArray(result);
         JSONObject jsonObject;
         Iterator<Object> iterator=jsonArray.iterator();
         while(iterator.hasNext()){
             jsonObject=(JSONObject) iterator.next();
-
-
             collaborators.add(Developer.createDeveloper(jsonObject.getString("login"),
                     jsonObject.getLong("id")));
         }
         return collaborators;
+    }
+
+    public  void getIssues(Repository repository){
+        String link ="https://api.github.com/repos/"+repository.getOwner().getLogin()+"/"+repository.getName()+"/issues";
+        String result =getData(link);
+        JSONArray jsonArray= new JSONArray(result);
+        JSONObject jsonObject;
+        JSONObject creatorJson;
+        JSONObject assigneeJson;
+        Long creatorID;
+        Long assigneeID;
+        Developer creator;
+        Developer assignee;
+        Long number; Long ID;
+        String title; String body;
+        State state;
+        Date createdAt; Date updatedAt; Date closedAt;
+        Iterator<Object> iterator=jsonArray.iterator();
+        while(iterator.hasNext()){
+            jsonObject=(JSONObject) iterator.next();
+            creatorJson =jsonObject.getJSONObject("user");
+            creatorID=creatorJson.getLong("id");
+            creator=Developer.developersMap.get(creatorID);
+            if(creator == null){
+                creator =Developer.createDeveloper(creatorJson.getString("login"),creatorID);
+            }
+            System.out.println("yoo");
+            if(jsonObject.get("assignee") ==  JSONObject.NULL){
+                assignee=null;
+            }else {
+                assigneeJson = jsonObject.getJSONObject("assignee");
+                assigneeID = assigneeJson.getLong("id");
+                assignee = Developer.developersMap.get(assigneeID);
+                if(assignee == null){
+                    assignee=Developer.createDeveloper(assigneeJson.getString("login"), assigneeID);
+                }
+            }
+
+            number=jsonObject.getLong("number");
+            ID =jsonObject.getLong("id");
+            title = jsonObject.getString("title");
+            body = jsonObject.getString("body");
+            state =Converter.stringToState(jsonObject.getString("state"));
+            createdAt =Converter.stringToDate(jsonObject.getString("created_at"));
+            updatedAt=Converter.stringToDate(jsonObject.getString("updated_at"));
+            if(jsonObject.get("closed_at") == JSONObject.NULL){
+                closedAt=null;
+            }else {
+                closedAt=Converter.stringToDate(jsonObject.getString("closed_at"));
+            }
+
+            Issue.createIssue(repository,creator,assignee,number,ID,title,body,state,createdAt,updatedAt,closedAt);
+            //TODO get the milestone and pull request
+
+        }
+
     }
 
 }

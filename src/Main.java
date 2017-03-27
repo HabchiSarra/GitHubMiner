@@ -18,12 +18,12 @@ public class Main {
                 //scanner.next();
         System.out.println("The repository link: ");
 
-        String link ="https://api.github.com/repos/rouvoy/jfilter";
+        String link ="https://api.github.com/repos/INRIA/spoon";
                 //scanner.next();
         ContentFetcher fetcher=new ContentFetcher(token);
         Repository repository=fetcher.getRepository(link);
         repository.print();
-    
+
 
 
     }

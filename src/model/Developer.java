@@ -1,6 +1,7 @@
 package model;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 
 /**
  * Created by sarra on 13/02/17.
@@ -12,8 +13,10 @@ public class Developer {
     private ArrayList<Commit> commits;
     private ArrayList<Commit> authoredCommits;
     private String mail;
+    private ArrayList<Issue> createdIssues;
+    private ArrayList<Issue> assignedIssues;
 
-
+    public static HashMap<Long,Developer> developersMap =new HashMap<>();
 
     private Developer(String login, Long ID) {
         this.login = login;
@@ -21,10 +24,14 @@ public class Developer {
         this.repositories=new ArrayList<>();
         this.commits=new ArrayList<>();
         this.authoredCommits=new ArrayList<>();
+        this.createdIssues=new ArrayList<>();
+        this.assignedIssues=new ArrayList<>();
     }
 
     public static Developer createDeveloper(String login, Long ID){
-        return new Developer(login,ID);
+        Developer developer=new Developer(login, ID);
+        developersMap.put(ID,developer);
+        return developer;
     }
     public String getLogin() {
         return login;
@@ -91,4 +98,21 @@ public class Developer {
     public void setMail(String mail) {
         this.mail = mail;
     }
+
+    public ArrayList<Issue> getCreatedIssues() {
+        return createdIssues;
+    }
+
+    public void addCreatedIssue(Issue issue){
+        this.createdIssues.add(issue);
+    }
+
+    public ArrayList<Issue> getAssignedIssues() {
+        return assignedIssues;
+    }
+    public void addAssignedIssue(Issue issue){
+        this.assignedIssues.add(issue);
+    }
+
+
 }

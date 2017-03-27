@@ -2,6 +2,7 @@ package model;
 
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.HashMap;
 
 /**
  * Created by sarra on 13/02/17.
@@ -9,7 +10,7 @@ import java.util.Date;
 public class Repository {
     private String name;
     private Developer owner;
-    private ArrayList<Developer> contributors;
+    private HashMap<Long, Developer> contributors;
     private ArrayList<Developer> collaborators;
     private int stargazersCount;
     private int watchersCount;
@@ -18,7 +19,7 @@ public class Repository {
     private Date pushDate;
     private ArrayList<Commit> commits;
     private Long ID;
-
+    private ArrayList<Issue> issues;
 
 
 
@@ -39,13 +40,10 @@ public class Repository {
     }
 
 
-    public ArrayList<Developer> getContributers() {
+    public HashMap<Long,Developer> getContributers() {
         return contributors;
     }
 
-    public void setContributers(ArrayList<Developer> contributers) {
-        this.contributors = contributers;
-    }
 
     public int getStargazersCount() {
         return stargazersCount;
@@ -99,7 +97,7 @@ public class Repository {
         this.ID=ID;
         this.name = name;
         this.owner = owner;
-        this.contributors=new ArrayList<>();
+        this.contributors=new HashMap<>();
         this.collaborators=new ArrayList<>();
         this.stargazersCount=stargazersCount;
         this.watchersCount=watchersCount;
@@ -107,6 +105,7 @@ public class Repository {
         this.pushDate=pushDate;
         this.description=description;
         this.commits=new ArrayList<>();
+        this.issues=new ArrayList<>();
 
     }
     public void addCommit(Commit commit){
@@ -114,7 +113,7 @@ public class Repository {
     }
 
     public void addContributor(Developer developer){
-        this.contributors.add(developer);
+        this.contributors.put(developer.getID(),developer);
     }
 
     public void print(){
@@ -157,11 +156,19 @@ public class Repository {
         this.ID = ID;
     }
 
-    public ArrayList<Developer> getContributors() {
+    public HashMap<Long,Developer> getContributors() {
         return contributors;
     }
 
     public ArrayList<Commit> getCommits() {
         return commits;
+    }
+
+    public ArrayList<Issue> getIssues() {
+        return issues;
+    }
+
+    public void addIssue(Issue issue){
+        this.issues.add(issue);
     }
 }

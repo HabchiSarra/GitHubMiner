@@ -1,4 +1,5 @@
 import model.FileStatus;
+import model.State;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -13,7 +14,7 @@ import java.util.Date;
  */
 public class Converter {
 
-    public static Date getDate(String dateString){
+    public static Date stringToDate(String dateString){
 
         SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss'Z'");
 
@@ -28,7 +29,7 @@ public class Converter {
     }
 
 
-    public static String convertStreamToString(InputStream is) {
+    public static String streamToString(InputStream is) {
 
         BufferedReader reader = new BufferedReader(new InputStreamReader(is));
         StringBuilder sb = new StringBuilder();
@@ -50,7 +51,7 @@ public class Converter {
         return sb.toString();
     }
 
-    public static FileStatus convertDataToFileStatus(String statusString){
+    public static FileStatus stringToFileStatus(String statusString){
 
         if(statusString.toLowerCase().equals("removed")){
             return FileStatus.REMOVED;
@@ -58,6 +59,16 @@ public class Converter {
             return FileStatus.MODIFIED;
         }else{
             return FileStatus.ADDED;
+        }
+    }
+
+    public static State stringToState(String stateString){
+        if(stateString.toLowerCase().equals("all")){
+            return State.ALL;
+        }else if(stateString.toLowerCase().equals("closed")){
+            return State.CLOSED;
+        }else{
+            return State.OPEN;
         }
     }
 }
