@@ -48,8 +48,8 @@ public class Fetcher {
         Repository repository=Repository.createRepository(ID, name,owner,description,
                 stargazersCount,watchersCount,commitDate,pushDate);
         getRepoCommits(repository);
-        repository.setCollaborators(getCollaborators(repository));
-        getIssues(repository);
+       // repository.setCollaborators(getCollaborators(repository));
+       // getIssues(repository);
 
         System.out.println("Hola !! ");
         return repository;
@@ -77,10 +77,10 @@ public class Fetcher {
                 instream.close();
             }
             // Headers
-//            org.apache.http.Header[] headers = response.getAllHeaders();
-//            for (int i = 0; i < headers.length; i++) {
-//                //System.out.println(headers[i]);
-//            }
+            org.apache.http.Header[] headers = response.getAllHeaders();
+            for (int i = 0; i < headers.length; i++) {
+                //System.out.println(headers[i]);
+            }
         } catch (ClientProtocolException e1) {
             e1.printStackTrace();
         } catch (IOException e1) {
@@ -89,19 +89,73 @@ public class Fetcher {
         return result;
     }
 
+    public  void getFakeData(Repository repository){
+        String link;
+        int numberOfPages =1;
+        int actualPage = 0;
+        while(actualPage<numberOfPages) {
+            actualPage++;
+            link = "https://api.github.com/repos/" + repository.getOwner().getLogin() + "/" + repository.getName() + "/commits";
+            link = link + "?page=" + (actualPage);
+            HttpClient client = new DefaultHttpClient();
+            HttpGet request = new HttpGet(link);
+            request.addHeader("Authorization", " token " + token);
+            HttpResponse response;
+            int statusCode;
+            String result = null;
+            try {
+                response = client.execute(request);
+                statusCode = response.getStatusLine().getStatusCode();
+                if (statusCode != 200) {
+                    return ;
+                }
+                numberOfPages = Integer.valueOf(response.getAllHeaders()[15].getElements()[1].getValue().split(">")[0]);
+                HttpEntity entity = response.getEntity();
+                if (entity != null) {
+                    InputStream instream = entity.getContent();
+                    result = Converter.streamToString(instream);
+                    //System.out.println("RESULT:: "+ result);
+                    instream.close();
+                }
+
+                JSONArray jsonArray = new JSONArray(result);
+                JSONObject jsonObject;
+                String sha;
+                Iterator<Object> iterator = jsonArray.iterator();
+                while (iterator.hasNext()) {
+                    jsonObject = (JSONObject) iterator.next();
+                    sha = jsonObject.getString("sha");
+                    getCommit(repository, sha);
+                }
+                // Headers
+//            org.apache.http.Header[] headers = response.getAllHeaders();
+//            for (int i = 0; i < headers.length; i++) {
+//                //System.out.println(headers[i]);
+//            }
+            } catch (ClientProtocolException e1) {
+                e1.printStackTrace();
+            } catch (IOException e1) {
+                e1.printStackTrace();
+            }
+        }
+        //return result;
+    }
+
+
 
     public void  getRepoCommits(Repository repository){
-        String link = "https://api.github.com/repos/"+repository.getOwner().getLogin()+"/"+repository.getName()+"/commits";
-        String result=getData(link);
-        JSONArray jsonArray=new JSONArray(result);
-        JSONObject jsonObject;
-        String sha;
-        Iterator<Object> iterator=jsonArray.iterator();
-        while(iterator.hasNext()){
-            jsonObject=(JSONObject) iterator.next();
-            sha=jsonObject.getString("sha");
-            getCommit(repository,sha);
-        }
+//        String link = "https://api.github.com/repos/"+repository.getOwner().getLogin()+"/"+repository.getName()+"/commits";
+//        String result=getFakeData(link);
+//        JSONArray jsonArray=new JSONArray(result);
+//        JSONObject jsonObject;
+//        String sha;
+//        Iterator<Object> iterator=jsonArray.iterator();
+//        while(iterator.hasNext()){
+//            jsonObject=(JSONObject) iterator.next();
+//            sha=jsonObject.getString("sha");
+//            getCommit(repository,sha);
+//        }
+        getFakeData(repository);
 
     }
 
@@ -110,12 +164,20 @@ public class Fetcher {
         String result=getData(link);
         JSONObject jsonObject = new JSONObject(result);
         String message =jsonObject.getJSONObject("commit").getString("message");
-        JSONObject jsonAuthor=jsonObject.getJSONObject("author");
+        JSONObject jsonAuthor=null;
+        try {
+            jsonAuthor=jsonObject.getJSONObject("author");
+        }catch (JSONException e ){
+            e.printStackTrace();
+        }
         JSONObject jsonCommitter=jsonObject.getJSONObject("committer");
-        Developer author;
+        Developer author=null;
         Developer committer;
-        author=Developer.createDeveloper(jsonAuthor.getString("login"),jsonAuthor.getLong("id"));
-        if(!(jsonAuthor.getLong("id")== jsonCommitter.getLong("id"))){
+        if(jsonAuthor!=null)
+        {
+            author=Developer.createDeveloper(jsonAuthor.getString("login"),jsonAuthor.getLong("id"));
+        }
+        if(jsonAuthor.getLong("id")!= jsonCommitter.getLong("id")){
             committer= Developer.createDeveloper(jsonCommitter.getString("login"),jsonCommitter.getLong("id"));
         }else{
             committer=author;
