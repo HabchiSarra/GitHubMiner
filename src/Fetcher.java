@@ -34,7 +34,6 @@ public class Fetcher {
         String name = jsonObject.getString("name");
         Long ID = jsonObject.getLong("id");
         String description = jsonObject.getString("description");
-
         String createdAt= jsonObject.getString("created_at");
         String pushed_at=jsonObject.getString("pushed_at");
         Date commitDate=Converter.stringToDate(createdAt);
@@ -48,8 +47,8 @@ public class Fetcher {
         Repository repository=Repository.createRepository(ID, name,owner,description,
                 stargazersCount,watchersCount,commitDate,pushDate);
         getRepoCommits(repository);
-       // repository.setCollaborators(getCollaborators(repository));
-       // getIssues(repository);
+        repository.setCollaborators(getCollaborators(repository));
+        getIssues(repository);
 
         System.out.println("Hola !! ");
         return repository;
@@ -144,18 +143,54 @@ public class Fetcher {
 
 
     public void  getRepoCommits(Repository repository){
-//        String link = "https://api.github.com/repos/"+repository.getOwner().getLogin()+"/"+repository.getName()+"/commits";
-//        String result=getFakeData(link);
-//        JSONArray jsonArray=new JSONArray(result);
-//        JSONObject jsonObject;
-//        String sha;
-//        Iterator<Object> iterator=jsonArray.iterator();
-//        while(iterator.hasNext()){
-//            jsonObject=(JSONObject) iterator.next();
-//            sha=jsonObject.getString("sha");
-//            getCommit(repository,sha);
-//        }
-        getFakeData(repository);
+        String link;
+        int numberOfPages =1;
+        int actualPage = 0;
+        while(actualPage<numberOfPages) {
+            actualPage++;
+            link = "https://api.github.com/repos/" + repository.getOwner().getLogin() + "/" + repository.getName() + "/commits";
+            link = link + "?page=" + (actualPage);
+            HttpClient client = new DefaultHttpClient();
+            HttpGet request = new HttpGet(link);
+            request.addHeader("Authorization", " token " + token);
+            HttpResponse response;
+            int statusCode;
+            String result = null;
+            try {
+                response = client.execute(request);
+                statusCode = response.getStatusLine().getStatusCode();
+                if (statusCode != 200) {
+                    return ;
+                }
+                numberOfPages = Integer.valueOf(response.getAllHeaders()[15].getElements()[1].getValue().split(">")[0]);
+                HttpEntity entity = response.getEntity();
+                if (entity != null) {
+                    InputStream instream = entity.getContent();
+                    result = Converter.streamToString(instream);
+                    //System.out.println("RESULT:: "+ result);
+                    instream.close();
+                }
+
+                JSONArray jsonArray = new JSONArray(result);
+                JSONObject jsonObject;
+                String sha;
+                Iterator<Object> iterator = jsonArray.iterator();
+                while (iterator.hasNext()) {
+                    jsonObject = (JSONObject) iterator.next();
+                    sha = jsonObject.getString("sha");
+                    getCommit(repository, sha);
+                }
+                // Headers
+//            org.apache.http.Header[] headers = response.getAllHeaders();
+//            for (int i = 0; i < headers.length; i++) {
+//                //System.out.println(headers[i]);
+//            }
+            } catch (ClientProtocolException e1) {
+                e1.printStackTrace();
+            } catch (IOException e1) {
+                e1.printStackTrace();
+            }
+        }
 
     }
 
@@ -165,27 +200,42 @@ public class Fetcher {
         JSONObject jsonObject = new JSONObject(result);
         String message =jsonObject.getJSONObject("commit").getString("message");
         JSONObject jsonAuthor=null;
+        JSONObject jsonCommitter = null ;
+        String d1; String d2;
+        Date authoringDate=null;Date commitDate=null;
         try {
             jsonAuthor=jsonObject.getJSONObject("author");
+            d1 =jsonObject.getJSONObject("commit").getJSONObject("author").getString("date");
+            authoringDate =Converter.stringToDate(d1);
+
         }catch (JSONException e ){
             e.printStackTrace();
         }
-        JSONObject jsonCommitter=jsonObject.getJSONObject("committer");
+        try {
+            jsonCommitter=jsonObject.getJSONObject("committer");
+            d2 =jsonObject.getJSONObject("commit").getJSONObject("committer").getString("date");
+            commitDate=Converter.stringToDate(d2);
+        }catch (JSONException e ){
+            e.printStackTrace();
+        }
         Developer author=null;
-        Developer committer;
+        Developer committer=null;
         if(jsonAuthor!=null)
         {
             author=Developer.createDeveloper(jsonAuthor.getString("login"),jsonAuthor.getLong("id"));
-        }
-        if(jsonAuthor.getLong("id")!= jsonCommitter.getLong("id")){
-            committer= Developer.createDeveloper(jsonCommitter.getString("login"),jsonCommitter.getLong("id"));
+            if(committer !=null){
+                if(jsonAuthor.getLong("id")!= jsonCommitter.getLong("id")){
+                    committer= Developer.createDeveloper(jsonCommitter.getString("login"),jsonCommitter.getLong("id"));
+                }else{
+                    committer=author;
+                }
+            }
         }else{
-            committer=author;
+            if(committer!=null){
+                committer= Developer.createDeveloper(jsonCommitter.getString("login"),jsonCommitter.getLong("id"));
+            }
         }
-        String d1 =jsonObject.getJSONObject("commit").getJSONObject("author").getString("date");
-        String d2 =jsonObject.getJSONObject("commit").getJSONObject("committer").getString("date");
-        Date authoringDate =Converter.stringToDate(d1);
-        Date commitDate=Converter.stringToDate(d2);
+
         Commit commit=Commit.createCommit(sha,author,committer,message,authoringDate,commitDate, repository);
         //Getting files
         JSONArray jsonFiles =jsonObject.getJSONArray("files");
@@ -200,11 +250,11 @@ public class Fetcher {
             deletions=jsonFile.getInt("deletions");
             status=jsonFile.getString("status");
             FileStatus fileStatus= Converter.stringToFileStatus(status);
-            try{
-                patch = jsonFile.getString("patch");
-            }catch (JSONException jsonException){
-                jsonException.printStackTrace();
-            }
+//            try{
+//                patch = jsonFile.getString("patch");
+//            }catch (JSONException jsonException){
+//                jsonException.printStackTrace();
+//            }
             String shaFile =jsonFile.getString("sha");
 
             commit.addFileModification(new FileModification(additions,deletions,fileName,fileStatus,shaFile));
@@ -233,9 +283,9 @@ public class Fetcher {
     }
 
     public  void getIssues(Repository repository){
-        String link ="https://api.github.com/repos/"+repository.getOwner().getLogin()+"/"+repository.getName()+"/issues";
-        String result =getData(link);
-        JSONArray jsonArray= new JSONArray(result);
+//        String link ="https://api.github.com/repos/"+repository.getOwner().getLogin()+"/"+repository.getName()+"/issues?state=all";
+//        String result =getData(link);
+        JSONArray jsonArray;
         JSONObject jsonObject;
         JSONObject creatorJson;
         JSONObject assigneeJson;
@@ -247,44 +297,87 @@ public class Fetcher {
         String title; String body;
         State state;
         Date createdAt; Date updatedAt; Date closedAt;
-        Iterator<Object> iterator=jsonArray.iterator();
-        while(iterator.hasNext()){
-            jsonObject=(JSONObject) iterator.next();
-            creatorJson =jsonObject.getJSONObject("user");
-            creatorID=creatorJson.getLong("id");
-            creator=Developer.developersMap.get(creatorID);
-            if(creator == null){
-                creator =Developer.createDeveloper(creatorJson.getString("login"),creatorID);
-            }
-            System.out.println("yoo");
-            if(jsonObject.get("assignee") ==  JSONObject.NULL){
-                assignee=null;
-            }else {
-                assigneeJson = jsonObject.getJSONObject("assignee");
-                assigneeID = assigneeJson.getLong("id");
-                assignee = Developer.developersMap.get(assigneeID);
-                if(assignee == null){
-                    assignee=Developer.createDeveloper(assigneeJson.getString("login"), assigneeID);
+        Iterator<Object> iterator;
+        String link;
+        int numberOfPages =1;
+        int actualPage = 0;
+        while(actualPage<numberOfPages) {
+            actualPage++;
+            link ="https://api.github.com/repos/"+repository.getOwner().getLogin()+"/"+repository.getName()+"/issues";
+            link = link + "?page=" + (actualPage)+"&state=all";
+            HttpClient client = new DefaultHttpClient();
+            HttpGet request = new HttpGet(link);
+            request.addHeader("Authorization", " token " + token);
+            HttpResponse response;
+            int statusCode;
+            String result = null;
+            try {
+                response = client.execute(request);
+                statusCode = response.getStatusLine().getStatusCode();
+                if (statusCode != 200) {
+                    return ;
                 }
+                numberOfPages = Integer.valueOf(response.getAllHeaders()[14].getElements()[1].getValue().split("&")[0]);
+                HttpEntity entity = response.getEntity();
+                if (entity != null) {
+                    InputStream instream = entity.getContent();
+                    result = Converter.streamToString(instream);
+                    //System.out.println("RESULT:: "+ result);
+                    instream.close();
+                }
+
+                jsonArray = new JSONArray(result);
+                iterator=jsonArray.iterator();
+                while(iterator.hasNext()){
+                    jsonObject=(JSONObject) iterator.next();
+                    creatorJson =jsonObject.getJSONObject("user");
+                    creatorID=creatorJson.getLong("id");
+                    creator=Developer.developersMap.get(creatorID);
+                    if(creator == null){
+                        creator =Developer.createDeveloper(creatorJson.getString("login"),creatorID);
+                    }
+                    if(jsonObject.get("assignee") ==  JSONObject.NULL){
+                        assignee=null;
+                    }else {
+                        assigneeJson = jsonObject.getJSONObject("assignee");
+                        assigneeID = assigneeJson.getLong("id");
+                        assignee = Developer.developersMap.get(assigneeID);
+                        if(assignee == null){
+                            assignee=Developer.createDeveloper(assigneeJson.getString("login"), assigneeID);
+                        }
+                    }
+
+                    number=jsonObject.getLong("number");
+                    ID =jsonObject.getLong("id");
+                    title = jsonObject.getString("title");
+                    body = jsonObject.getString("body");
+                    state =Converter.stringToState(jsonObject.getString("state"));
+                    createdAt =Converter.stringToDate(jsonObject.getString("created_at"));
+                    updatedAt=Converter.stringToDate(jsonObject.getString("updated_at"));
+                    if(jsonObject.get("closed_at") == JSONObject.NULL){
+                        closedAt=null;
+                    }else {
+                        closedAt=Converter.stringToDate(jsonObject.getString("closed_at"));
+                    }
+
+                    Issue.createIssue(repository,creator,assignee,number,ID,title,body,state,createdAt,updatedAt,closedAt);
+                    //TODO get the milestone and pull request
+
+                }
+                // Headers
+//            org.apache.http.Header[] headers = response.getAllHeaders();
+//            for (int i = 0; i < headers.length; i++) {
+//                //System.out.println(headers[i]);
+//            }
+            } catch (ClientProtocolException e1) {
+                e1.printStackTrace();
+            } catch (IOException e1) {
+                e1.printStackTrace();
             }
-
-            number=jsonObject.getLong("number");
-            ID =jsonObject.getLong("id");
-            title = jsonObject.getString("title");
-            body = jsonObject.getString("body");
-            state =Converter.stringToState(jsonObject.getString("state"));
-            createdAt =Converter.stringToDate(jsonObject.getString("created_at"));
-            updatedAt=Converter.stringToDate(jsonObject.getString("updated_at"));
-            if(jsonObject.get("closed_at") == JSONObject.NULL){
-                closedAt=null;
-            }else {
-                closedAt=Converter.stringToDate(jsonObject.getString("closed_at"));
-            }
-
-            Issue.createIssue(repository,creator,assignee,number,ID,title,body,state,createdAt,updatedAt,closedAt);
-            //TODO get the milestone and pull request
-
         }
+
+
+
 
     }
 

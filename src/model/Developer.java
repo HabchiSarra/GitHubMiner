@@ -29,7 +29,11 @@ public class Developer {
     }
 
     public static Developer createDeveloper(String login, Long ID){
-        Developer developer=new Developer(login, ID);
+        Developer developer;
+        if((developer =developersMap.get(ID))!=null){
+            return  developer;
+        }
+        developer=new Developer(login, ID);
         developersMap.put(ID,developer);
         return developer;
     }

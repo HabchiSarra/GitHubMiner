@@ -35,18 +35,22 @@ public class Commit {
 
         Commit commit=new Commit(sha,author,commiter,message, authoringDate, commitDate, repository);
         repository.addCommit(commit);
-        if(repository.getContributers().get(commiter.getID()) == null)
+        if((commiter !=null) && repository.getContributers().get(commiter.getID()) == null)
         {
             repository.addContributor(commiter);
         }
-        if(!commiter.equals(author)){
-            if(repository.getContributers().get(author.getID()) == null) {
-                repository.addContributor(author);
-            }
+        if(author !=null && repository.getContributers().get(author.getID()) == null) {
+            repository.addContributor(author);
         }
 
-        commiter.addCommit(commit);
-        author.addCommit(commit);
+        if(commiter !=null)
+        {
+            commiter.addCommit(commit);
+        }
+        if(author != null)
+        {
+            author.addAuthoredCommit(commit);
+        }
         return commit;
 
     }
