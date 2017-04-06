@@ -104,6 +104,10 @@ public class Issue {
         return pullRequest;
     }
 
+    public void setMilestone(Milestone milestone) {
+        this.milestone = milestone;
+    }
+
     public Milestone getMilestone() {
         return milestone;
     }

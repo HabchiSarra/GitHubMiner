@@ -12,6 +12,7 @@ public class Developer {
     private ArrayList<Repository> repositories;
     private ArrayList<Commit> commits;
     private ArrayList<Commit> authoredCommits;
+    private HashMap<Long, Milestone> milestones;
     private String mail;
     private ArrayList<Issue> createdIssues;
     private ArrayList<Issue> assignedIssues;
@@ -26,6 +27,7 @@ public class Developer {
         this.authoredCommits=new ArrayList<>();
         this.createdIssues=new ArrayList<>();
         this.assignedIssues=new ArrayList<>();
+        this.milestones =new HashMap<>();
     }
 
     public static Developer createDeveloper(String login, Long ID){
@@ -118,5 +120,19 @@ public class Developer {
         this.assignedIssues.add(issue);
     }
 
+    public static HashMap<Long, Developer> getDevelopersMap() {
+        return developersMap;
+    }
 
+    public static void setDevelopersMap(HashMap<Long, Developer> developersMap) {
+        Developer.developersMap = developersMap;
+    }
+
+    public HashMap<Long, Milestone> getMilestones() {
+        return milestones;
+    }
+
+    public void setMilestones(HashMap<Long, Milestone> milestones) {
+        this.milestones = milestones;
+    }
 }

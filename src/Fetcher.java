@@ -285,6 +285,7 @@ public class Fetcher {
     public  void getIssues(Repository repository){
 //        String link ="https://api.github.com/repos/"+repository.getOwner().getLogin()+"/"+repository.getName()+"/issues?state=all";
 //        String result =getData(link);
+        Issue issue; Milestone milestone;
         JSONArray jsonArray;
         JSONObject jsonObject;
         JSONObject creatorJson;
@@ -360,8 +361,13 @@ public class Fetcher {
                         closedAt=Converter.stringToDate(jsonObject.getString("closed_at"));
                     }
 
-                    Issue.createIssue(repository,creator,assignee,number,ID,title,body,state,createdAt,updatedAt,closedAt);
-                    //TODO get the milestone and pull request
+                    issue =Issue.createIssue(repository,creator,assignee,number,ID,title,body,state,createdAt,updatedAt,closedAt);
+                    milestone = getMilestone(repository, jsonObject);
+                    if(milestone!=null){
+                        issue.setMilestone(milestone);
+                        milestone.addIssue(issue);
+                    }
+                    //TODO get pull request
 
                 }
                 // Headers
@@ -379,6 +385,41 @@ public class Fetcher {
 
 
 
+    }
+
+    private Milestone getMilestone(Repository repository, JSONObject issueObject){
+        if(!issueObject.has("milestone")){
+            return null;
+        }
+        JSONObject jsonObject=issueObject.getJSONObject("milestone");
+        Milestone milestone;
+        Long ID = jsonObject.getLong("id");
+        if((milestone =repository.getMilestones().get(ID))!=null){
+            return milestone;
+        }
+        State state=Converter.stringToState(jsonObject.getString("state"));
+        Date createdAt =Converter.stringToDate("created_at");
+        Date updatedAt = Converter.stringToDate("updated_at");
+        Date closedAt = Converter.stringToDate("closed_at");
+        Date dueOn = Converter.stringToDate("due_on");
+        //Get the creator
+        Developer creator;
+        if(!jsonObject.has("creator")){
+            creator =null;
+        }else {
+            JSONObject creatorObject = jsonObject.getJSONObject("creator");
+            Long creatorId = creatorObject.getLong("id");
+            creator = Developer.createDeveloper(creatorObject.getString("login"), creatorId);
+            if (creatorObject.has("mail")) {
+                creator.setMail(creatorObject.getString("mail"));
+            }
+        }
+
+        milestone =Milestone.createMilestone (ID,jsonObject.getLong("number"),
+                repository,creator, jsonObject.getString("title"),state,jsonObject.getString("description"),
+                createdAt,updatedAt,closedAt,dueOn,jsonObject.getInt("open_issues"),jsonObject.getInt("closed_issues"));
+
+        return milestone;
     }
 
 }

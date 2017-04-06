@@ -11,6 +11,7 @@ public class Repository {
     private String name;
     private Developer owner;
     private HashMap<Long, Developer> contributors;
+    private HashMap<Long,Milestone> milestones;
     private ArrayList<Developer> collaborators;
     private int stargazersCount;
     private int watchersCount;
@@ -106,6 +107,7 @@ public class Repository {
         this.description=description;
         this.commits=new ArrayList<>();
         this.issues=new ArrayList<>();
+        this.milestones =new HashMap<>();
 
     }
     public void addCommit(Commit commit){
@@ -170,5 +172,21 @@ public class Repository {
 
     public void addIssue(Issue issue){
         this.issues.add(issue);
+    }
+
+    public void setContributors(HashMap<Long, Developer> contributors) {
+        this.contributors = contributors;
+    }
+
+    public HashMap<Long, Milestone> getMilestones() {
+        return milestones;
+    }
+
+    public void setMilestones(HashMap<Long, Milestone> milestones) {
+        this.milestones = milestones;
+    }
+
+    public void setCommits(ArrayList<Commit> commits) {
+        this.commits = commits;
     }
 }
