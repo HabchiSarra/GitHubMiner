@@ -13,6 +13,7 @@ public class Repository {
     private HashMap<Long, Developer> contributors;
     private HashMap<Long,Milestone> milestones;
     private ArrayList<Developer> collaborators;
+    private ArrayList<PullRequest> pullRequests;
     private int stargazersCount;
     private int watchersCount;
     private String description;
@@ -22,7 +23,31 @@ public class Repository {
     private Long ID;
     private ArrayList<Issue> issues;
 
+    public static Repository createRepository(Long ID, String name, Developer owner, String description, int stargazersCount,int watchersCount, Date commitDate,
+                                              Date pushDate ){
+        Repository repository=new Repository(ID,name,owner,description,stargazersCount,watchersCount,commitDate,pushDate);
+        owner.addRepository(repository);
+        return repository;
+    }
 
+    private Repository(Long ID, String name, Developer owner, String description, int stargazersCount,int watchersCount, Date commitDate,
+                       Date pushDate ) {
+        this.ID=ID;
+        this.name = name;
+        this.owner = owner;
+        this.contributors=new HashMap<>();
+        this.collaborators=new ArrayList<>();
+        this.stargazersCount=stargazersCount;
+        this.watchersCount=watchersCount;
+        this.commitDate=commitDate;
+        this.pushDate=pushDate;
+        this.description=description;
+        this.commits=new ArrayList<>();
+        this.issues=new ArrayList<>();
+        this.milestones =new HashMap<>();
+        this.pullRequests=new ArrayList<>();
+
+    }
 
     public String getName() {
         return name;
@@ -86,30 +111,7 @@ public class Repository {
         this.pushDate = pushDate;
     }
 
-     public static Repository createRepository(Long ID, String name, Developer owner, String description, int stargazersCount,int watchersCount, Date commitDate,
-                                       Date pushDate ){
-        Repository repository=new Repository(ID,name,owner,description,stargazersCount,watchersCount,commitDate,pushDate);
-        owner.addRepository(repository);
-        return repository;
-    }
 
-    private Repository(Long ID, String name, Developer owner, String description, int stargazersCount,int watchersCount, Date commitDate,
-                      Date pushDate ) {
-        this.ID=ID;
-        this.name = name;
-        this.owner = owner;
-        this.contributors=new HashMap<>();
-        this.collaborators=new ArrayList<>();
-        this.stargazersCount=stargazersCount;
-        this.watchersCount=watchersCount;
-        this.commitDate=commitDate;
-        this.pushDate=pushDate;
-        this.description=description;
-        this.commits=new ArrayList<>();
-        this.issues=new ArrayList<>();
-        this.milestones =new HashMap<>();
-
-    }
     public void addCommit(Commit commit){
          this.commits.add(commit);
     }
@@ -189,4 +191,13 @@ public class Repository {
     public void setCommits(ArrayList<Commit> commits) {
         this.commits = commits;
     }
+
+    public ArrayList<PullRequest> getPullRequests() {
+        return pullRequests;
+    }
+
+    public void addPullRequest(PullRequest pullRequest) {
+        this.pullRequests.add(pullRequest);
+    }
+
 }

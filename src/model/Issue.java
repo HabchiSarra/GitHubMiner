@@ -47,12 +47,13 @@ public class Issue {
                                State state, Date createdAt, Date updatedAt, Date closedAt){
 
         Issue issue = new Issue(repository,creator,assignee,number,id,title,body,state,createdAt,updatedAt,closedAt);
-        creator.addCreatedIssue(issue);
+        if(creator!=null){
+            creator.addCreatedIssue(issue);
+        }
         if(assignee!=null){
            assignee.addAssignedIssue(issue);
          }
         repository.addIssue(issue);
-        //Todo link to PullRequest and Milestone
         return issue;
     }
 
@@ -134,5 +135,9 @@ public class Issue {
 
     public void addEvent(IssueEvent issueEvent){
         this.events.add(issueEvent);
+    }
+
+    public void setPullRequest(PullRequest pullRequest) {
+        this.pullRequest = pullRequest;
     }
 }

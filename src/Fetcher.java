@@ -30,7 +30,6 @@ public class Fetcher {
     public  Repository getRepository(String link){
         String result=getData(link);
         JSONObject jsonObject = new JSONObject(result);
-        //System.out.println(jsonObject.toString());
         String name = jsonObject.getString("name");
         Long ID = jsonObject.getLong("id");
         String description = jsonObject.getString("description");
@@ -87,60 +86,6 @@ public class Fetcher {
         }
         return result;
     }
-
-    public  void getFakeData(Repository repository){
-        String link;
-        int numberOfPages =1;
-        int actualPage = 0;
-        while(actualPage<numberOfPages) {
-            actualPage++;
-            link = "https://api.github.com/repos/" + repository.getOwner().getLogin() + "/" + repository.getName() + "/commits";
-            link = link + "?page=" + (actualPage);
-            HttpClient client = new DefaultHttpClient();
-            HttpGet request = new HttpGet(link);
-            request.addHeader("Authorization", " token " + token);
-            HttpResponse response;
-            int statusCode;
-            String result = null;
-            try {
-                response = client.execute(request);
-                statusCode = response.getStatusLine().getStatusCode();
-                if (statusCode != 200) {
-                    return ;
-                }
-                numberOfPages = Integer.valueOf(response.getAllHeaders()[15].getElements()[1].getValue().split(">")[0]);
-                HttpEntity entity = response.getEntity();
-                if (entity != null) {
-                    InputStream instream = entity.getContent();
-                    result = Converter.streamToString(instream);
-                    //System.out.println("RESULT:: "+ result);
-                    instream.close();
-                }
-
-                JSONArray jsonArray = new JSONArray(result);
-                JSONObject jsonObject;
-                String sha;
-                Iterator<Object> iterator = jsonArray.iterator();
-                while (iterator.hasNext()) {
-                    jsonObject = (JSONObject) iterator.next();
-                    sha = jsonObject.getString("sha");
-                    getCommit(repository, sha);
-                }
-                // Headers
-//            org.apache.http.Header[] headers = response.getAllHeaders();
-//            for (int i = 0; i < headers.length; i++) {
-//                //System.out.println(headers[i]);
-//            }
-            } catch (ClientProtocolException e1) {
-                e1.printStackTrace();
-            } catch (IOException e1) {
-                e1.printStackTrace();
-            }
-        }
-        //return result;
-    }
-
-
 
     public void  getRepoCommits(Repository repository){
         String link;
@@ -245,7 +190,6 @@ public class Fetcher {
         while(iterator.hasNext()){
             jsonFile=(JSONObject) iterator.next();
             fileName=jsonFile.getString("filename");
-            //System.out.println("File name : "+fileName);
             additions=jsonFile.getInt("additions");
             deletions=jsonFile.getInt("deletions");
             status=jsonFile.getString("status");
@@ -285,7 +229,7 @@ public class Fetcher {
     public  void getIssues(Repository repository){
 //        String link ="https://api.github.com/repos/"+repository.getOwner().getLogin()+"/"+repository.getName()+"/issues?state=all";
 //        String result =getData(link);
-        Issue issue; Milestone milestone;
+        Issue issue; Milestone milestone; PullRequest pullRequest;
         JSONArray jsonArray;
         JSONObject jsonObject;
         JSONObject creatorJson;
@@ -367,7 +311,11 @@ public class Fetcher {
                         issue.setMilestone(milestone);
                         milestone.addIssue(issue);
                     }
-                    //TODO get pull request
+                    if(jsonObject.has("pull_request"))
+                    {
+                        getPullRequest(repository,issue);
+                    }
+
 
                 }
                 // Headers
@@ -381,10 +329,6 @@ public class Fetcher {
                 e1.printStackTrace();
             }
         }
-
-
-
-
     }
 
     private Milestone getMilestone(Repository repository, JSONObject issueObject){
@@ -398,10 +342,10 @@ public class Fetcher {
             return milestone;
         }
         State state=Converter.stringToState(jsonObject.getString("state"));
-        Date createdAt =Converter.stringToDate("created_at");
-        Date updatedAt = Converter.stringToDate("updated_at");
-        Date closedAt = Converter.stringToDate("closed_at");
-        Date dueOn = Converter.stringToDate("due_on");
+        Date createdAt =Converter.stringToDate(jsonObject.getString("created_at"));
+        Date updatedAt = Converter.stringToDate(jsonObject.getString("updated_at"));
+        Date closedAt = Converter.stringToDate(jsonObject.getString("closed_at"));
+        Date dueOn = Converter.stringToDate(jsonObject.getString("due_on"));
         //Get the creator
         Developer creator;
         if(!jsonObject.has("creator")){
@@ -415,11 +359,33 @@ public class Fetcher {
             }
         }
 
-        milestone =Milestone.createMilestone (ID,jsonObject.getLong("number"),
-                repository,creator, jsonObject.getString("title"),state,jsonObject.getString("description"),
-                createdAt,updatedAt,closedAt,dueOn,jsonObject.getInt("open_issues"),jsonObject.getInt("closed_issues"));
+        milestone =Milestone.createMilestone (ID,jsonObject.getLong("number"),repository,creator,jsonObject.getString("title"),
+                state,jsonObject.getString("description"),createdAt,updatedAt,closedAt,dueOn,jsonObject.getInt("open_issues"),
+                jsonObject.getInt("closed_issues"));
 
         return milestone;
+    }
+
+    private PullRequest getPullRequest(Repository repository, Issue issue){
+        PullRequest pullRequest;
+        String link = "https://api.github.com/repos/"+repository.getOwner().getLogin()+"/"
+                +repository.getName()+"/pulls"+issue.getNumber();
+
+        String result =getData(link);
+        JSONObject pullRequestObject = new JSONObject(result);
+        Long ID = pullRequestObject.getLong("id");
+        Date createdAt =Converter.stringToDate(pullRequestObject.getString("created_at"));
+        Date updatedAt = Converter.stringToDate(pullRequestObject.getString("updated_at"));
+        Date closedAt = Converter.stringToDate(pullRequestObject.getString("closed_at"));
+
+
+        pullRequest=PullRequest.createPullRequest(repository,ID,createdAt,updatedAt,closedAt, pullRequestObject.getInt("additions"),
+                pullRequestObject.getBoolean("mergeable"),pullRequestObject.getInt("deletions"),
+                pullRequestObject.getInt("changed_files"), pullRequestObject.getBoolean("maintainer_can_change"),
+                 issue, pullRequestObject.getBoolean("merged"));
+
+        //TODO add merge data
+        return pullRequest;
     }
 
 }
