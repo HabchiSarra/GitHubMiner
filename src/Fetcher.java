@@ -45,8 +45,8 @@ public class Fetcher {
         owner.setMail(ownerJson.getString("url"));
         Repository repository=Repository.createRepository(ID, name,owner,description,
                 stargazersCount,watchersCount,commitDate,pushDate);
-        getRepoCommits(repository);
-        repository.setCollaborators(getCollaborators(repository));
+   //     getRepoCommits(repository);
+     //   repository.setCollaborators(getCollaborators(repository));
         getIssues(repository);
 
         System.out.println("Hola !! ");
@@ -227,9 +227,7 @@ public class Fetcher {
     }
 
     public  void getIssues(Repository repository){
-//        String link ="https://api.github.com/repos/"+repository.getOwner().getLogin()+"/"+repository.getName()+"/issues?state=all";
-//        String result =getData(link);
-        Issue issue; Milestone milestone; PullRequest pullRequest;
+        Issue issue; Milestone milestone;
         JSONArray jsonArray;
         JSONObject jsonObject;
         JSONObject creatorJson;
@@ -311,7 +309,7 @@ public class Fetcher {
                         issue.setMilestone(milestone);
                         milestone.addIssue(issue);
                     }
-                    if(jsonObject.has("pull_request"))
+                    if(jsonObject.has("pull_request") )//&& jsonObject.get("pull_request")!= JSONObject.NULL)
                     {
                         getPullRequest(repository,issue);
                     }
@@ -332,7 +330,7 @@ public class Fetcher {
     }
 
     private Milestone getMilestone(Repository repository, JSONObject issueObject){
-        if(!issueObject.has("milestone")){
+        if(!issueObject.has("milestone") || issueObject.get("milestone") ==JSONObject.NULL ){
             return null;
         }
         JSONObject jsonObject=issueObject.getJSONObject("milestone");
@@ -369,19 +367,28 @@ public class Fetcher {
     private PullRequest getPullRequest(Repository repository, Issue issue){
         PullRequest pullRequest;
         String link = "https://api.github.com/repos/"+repository.getOwner().getLogin()+"/"
-                +repository.getName()+"/pulls"+issue.getNumber();
+                +repository.getName()+"/pulls/"+issue.getNumber();
 
         String result =getData(link);
         JSONObject pullRequestObject = new JSONObject(result);
         Long ID = pullRequestObject.getLong("id");
         Date createdAt =Converter.stringToDate(pullRequestObject.getString("created_at"));
         Date updatedAt = Converter.stringToDate(pullRequestObject.getString("updated_at"));
-        Date closedAt = Converter.stringToDate(pullRequestObject.getString("closed_at"));
+        Date closedAt = null;
+        if(pullRequestObject.has("closed_at") && pullRequestObject.get("closed_at") != JSONObject.NULL)
+        {
+            closedAt =Converter.stringToDate(pullRequestObject.getString("closed_at"));
+        }
 
-
+        Boolean mergeable =null;
+        if(pullRequestObject.get("mergeable")!= JSONObject.NULL)
+        {
+            mergeable= pullRequestObject.getBoolean("mergeable");
+        }
         pullRequest=PullRequest.createPullRequest(repository,ID,createdAt,updatedAt,closedAt, pullRequestObject.getInt("additions"),
-                pullRequestObject.getBoolean("mergeable"),pullRequestObject.getInt("deletions"),
-                pullRequestObject.getInt("changed_files"), pullRequestObject.getBoolean("maintainer_can_change"),
+                mergeable,
+                pullRequestObject.getInt("deletions"),
+                pullRequestObject.getInt("changed_files"), pullRequestObject.getBoolean("maintainer_can_modify"),
                  issue, pullRequestObject.getBoolean("merged"));
 
         //TODO add merge data

@@ -14,8 +14,8 @@ public class PullRequest {
     Date closedAT;
     Date mergedAt;
     Commit mergeCommit;
-    boolean merged;
-    boolean mergeable;
+    Boolean merged;
+    Boolean mergeable;
     Developer mergedBy;
     int additions;
     int deletions;
@@ -25,8 +25,8 @@ public class PullRequest {
     ArrayList<Commit> commits;
     ArrayList<IssueComment> ReviewComments;
 
-    private PullRequest(Repository repository, Long ID, Date createdAT, Date updatedAt, Date closedAT, int additions,boolean mergeable,
-                       int deletions, int changedFiles, boolean maintainerCanModify, Issue issue, boolean merged) {
+    private PullRequest(Repository repository, Long ID, Date createdAT, Date updatedAt, Date closedAT, int additions,Boolean mergeable,
+                       int deletions, int changedFiles, boolean maintainerCanModify, Issue issue, Boolean merged) {
         this.repository = repository;
         this.ID = ID;
         this.createdAT = createdAT;
@@ -48,8 +48,8 @@ public class PullRequest {
     }
 
     public static PullRequest createPullRequest(Repository repository, Long ID, Date createdAT, Date updatedAt, Date closedAT,
-                                         int additions, boolean mergeable, int deletions, int changedFiles, boolean maintainerCanModify,
-                                         Issue issue,boolean merged){
+                                         int additions, Boolean mergeable, int deletions, int changedFiles, boolean maintainerCanModify,
+                                         Issue issue,Boolean merged){
         PullRequest pullRequest=new PullRequest(repository,ID,createdAT,updatedAt,closedAT,additions,mergeable, deletions,
                 changedFiles, maintainerCanModify, issue, merged);
         issue.setPullRequest(pullRequest);
@@ -113,19 +113,19 @@ public class PullRequest {
         this.mergeCommit = mergeCommit;
     }
 
-    public boolean isMerged() {
+    public Boolean isMerged() {
         return merged;
     }
 
-    public void setMerged(boolean merged) {
+    public void setMerged(Boolean merged) {
         this.merged = merged;
     }
 
-    public boolean isMergeable() {
+    public Boolean isMergeable() {
         return mergeable;
     }
 
-    public void setMergeable(boolean mergeable) {
+    public void setMergeable(Boolean mergeable) {
         this.mergeable = mergeable;
     }
 
