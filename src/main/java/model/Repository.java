@@ -19,7 +19,8 @@ public class Repository {
     private String description;
     private Date commitDate;
     private Date pushDate;
-    private ArrayList<Commit> commits;
+    private HashMap<String,Commit> commits;
+
     private Long ID;
     private ArrayList<Issue> issues;
 
@@ -42,7 +43,7 @@ public class Repository {
         this.commitDate=commitDate;
         this.pushDate=pushDate;
         this.description=description;
-        this.commits=new ArrayList<>();
+        this.commits=new HashMap<>();
         this.issues=new ArrayList<>();
         this.milestones =new HashMap<>();
         this.pullRequests=new ArrayList<>();
@@ -113,31 +114,12 @@ public class Repository {
 
 
     public void addCommit(Commit commit){
-         this.commits.add(commit);
+         this.commits.put(commit.getSha(),commit);
     }
+
 
     public void addContributor(Developer developer){
         this.contributors.put(developer.getID(),developer);
-    }
-
-    public void print(){
-        System.out.println("______________________________________________________________________");
-        System.out.println("ID : "+ this.ID);
-        System.out.println("name: "+ this.name);
-        System.out.println("description: "+this.description);
-        System.out.println("commit date: "+ this.commitDate.toString());
-        System.out.println("owner: ");
-        System.out.println("+++++++++++++++++++++++++++++++++++++++");
-        this.owner.print();
-        System.out.println("+++++++++++++++++++++++++++++++++++++++");
-
-        System.out.println("Commits: ");
-        for(Commit commit:this.commits){
-            System.out.println("***************************************");
-            commit.print();
-            System.out.println("***************************************");
-        }
-        System.out.println("______________________________________________________________________");
     }
 
     public ArrayList<Developer> getCollaborators() {
@@ -164,7 +146,7 @@ public class Repository {
         return contributors;
     }
 
-    public ArrayList<Commit> getCommits() {
+    public HashMap<String,Commit> getCommits() {
         return commits;
     }
 
@@ -186,10 +168,6 @@ public class Repository {
 
     public void setMilestones(HashMap<Long, Milestone> milestones) {
         this.milestones = milestones;
-    }
-
-    public void setCommits(ArrayList<Commit> commits) {
-        this.commits = commits;
     }
 
     public ArrayList<PullRequest> getPullRequests() {

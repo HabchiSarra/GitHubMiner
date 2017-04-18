@@ -241,6 +241,9 @@ public class Fetcher {
         Date createdAt; Date updatedAt; Date closedAt;
         Iterator<Object> iterator;
         String link;
+        JSONArray labelsArray;
+        JSONObject labelObject;
+        Iterator<Object> labelIterator;
         int numberOfPages =1;
         int actualPage = 0;
         while(actualPage<numberOfPages) {
@@ -311,6 +314,17 @@ public class Fetcher {
                     if(jsonObject.has("pull_request") )//&& jsonObject.get("pull_request")!= JSONObject.NULL)
                     {
                         getPullRequest(repository,issue);
+                    }
+                    getIssueComments(issue);
+                    if(jsonObject.has("labels")){
+                        labelsArray=jsonObject.getJSONArray("labels");
+                        labelIterator=labelsArray.iterator();
+                        while(labelIterator.hasNext()) {
+                            labelObject = (JSONObject) labelIterator.next();
+                            IssueLabel.createIssueLabel(labelObject.getString("name"),labelObject.getLong("id"),
+                                    labelObject.getBoolean("default"),issue);
+                        }
+
                     }
 
 
@@ -385,13 +399,69 @@ public class Fetcher {
             mergeable= pullRequestObject.getBoolean("mergeable");
         }
         pullRequest=PullRequest.createPullRequest(repository,ID,createdAt,updatedAt,closedAt, pullRequestObject.getInt("additions"),
-                mergeable,
-                pullRequestObject.getInt("deletions"),
-                pullRequestObject.getInt("changed_files"), pullRequestObject.getBoolean("maintainer_can_modify"),
-                 issue, pullRequestObject.getBoolean("merged"));
+                mergeable, pullRequestObject.getInt("deletions"), pullRequestObject.getInt("changed_files"),
+                pullRequestObject.getBoolean("maintainer_can_modify"),issue, pullRequestObject.getBoolean("merged"));
 
+        linkPullRequestCommits(pullRequest);
         //TODO add merge data
         return pullRequest;
     }
+
+    private void linkPullRequestCommits(PullRequest pullRequest){
+        String link = "https://api.github.com/repos/"+pullRequest.getRepository().getOwner().getLogin()+"/"
+                +pullRequest.getRepository().getName()+"/pulls/"+pullRequest.getIssue().getNumber()+"/commits";
+        String result =getData(link);
+
+        if(result == null){
+            return;
+        }
+        JSONArray jsonArray= new JSONArray(result);
+        JSONObject jsonObject;
+        String sha;
+        Commit commit;
+        Iterator<Object> iterator=jsonArray.iterator();
+        while(iterator.hasNext()){
+            jsonObject=(JSONObject) iterator.next();
+            sha=jsonObject.getString("sha");
+            if((commit = pullRequest.getRepository().getCommits().get(sha))!=null){
+                pullRequest.getCommits().add(commit);
+            }else{
+                System.out.println("Pull request commit not found");
+            }
+
+        }
+
+    }
+
+    private void getIssueComments(Issue issue){
+        String link = "https://api.github.com/repos/"+issue.getRepository().getOwner().getLogin()+"/"
+                +issue.getRepository().getName()+"/issues/"+issue.getNumber()+"/comments";
+        String result =getData(link);
+
+        if(result == null){
+            return;
+        }
+        JSONArray jsonArray= new JSONArray(result);
+        JSONObject jsonObject;
+        Long commenterId;
+        String commenterLogin;
+        Date createdAt, updatedAt;
+        Developer commenter =null;
+        Iterator<Object> iterator=jsonArray.iterator();
+        while(iterator.hasNext()){
+            jsonObject=(JSONObject) iterator.next();
+            if(jsonObject.has("user") ){
+                commenterId =jsonObject.getJSONObject("user").getLong("id");
+                commenterLogin=jsonObject.getJSONObject("user").getString("login");
+                commenter =Developer.createDeveloper(commenterLogin,commenterId);
+            }
+            createdAt =Converter.stringToDate(jsonObject.getString("created_at"));
+            updatedAt=Converter.stringToDate(jsonObject.getString("updated_at"));
+            IssueComment.createComment(commenter,issue,jsonObject.getString("body"),
+                    jsonObject.getLong("id"),createdAt,updatedAt);
+
+        }
+    }
+
 
 }
