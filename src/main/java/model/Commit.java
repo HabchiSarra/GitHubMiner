@@ -10,7 +10,7 @@ public class Commit {
 
     String sha;
     Developer author;
-    Developer commiter;
+    Developer committer;
     String message;
     Repository repository;
     Date authoringDate;
@@ -19,10 +19,10 @@ public class Commit {
 
 
 
-    public Commit(String sha, Developer author, Developer commiter, String message, Date authoringDate, Date commitDate, Repository repository) {
+    public Commit(String sha, Developer author, Developer committer, String message, Date authoringDate, Date commitDate, Repository repository) {
         this.sha = sha;
         this.author = author;
-        this.commiter = commiter;
+        this.committer = committer;
         this.message = message;
         this.authoringDate = authoringDate;
         this.commitDate = commitDate;
@@ -71,12 +71,12 @@ public class Commit {
         this.author = author;
     }
 
-    public Developer getCommiter() {
-        return commiter;
+    public Developer getCommitter() {
+        return committer;
     }
 
-    public void setCommiter(Developer commiter) {
-        this.commiter = commiter;
+    public void setCommitter(Developer committer) {
+        this.committer = committer;
     }
 
     public String getMessage() {
@@ -127,7 +127,7 @@ public class Commit {
         System.out.println("authoring date: "+this.authoringDate.toString());
         System.out.println("committer: ");
         System.out.println("+++++++++++++++++++++++++++++++++++++++");
-        this.commiter.print();
+        this.committer.print();
         System.out.println("+++++++++++++++++++++++++++++++++++++++");
     }
 }

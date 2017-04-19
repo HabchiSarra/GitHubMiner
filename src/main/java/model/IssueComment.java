@@ -25,7 +25,10 @@ public class IssueComment {
     public static IssueComment createComment(Developer commenter, Issue issue, String body, Long id, Date createdAt, Date updateAt){
         IssueComment issueComment=new IssueComment(commenter,issue,body,id,createdAt,updateAt);
         issue.addComment(issueComment);
-        commenter.addIssueComment(issueComment);
+        if(commenter !=null)
+        {
+            commenter.addIssueComment(issueComment);
+        }
         return issueComment;
     }
 

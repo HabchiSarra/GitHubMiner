@@ -24,7 +24,7 @@ public class Main {
                 //scanner.next();
         ContentFetcher fetcher=new ContentFetcher(token);
         Repository repository=fetcher.getRepository(link);
-        ModelToGraph modelToGraph =new ModelToGraph("/home/sarra/Desktop/Github-DB");
+        ModelToGraph modelToGraph =new ModelToGraph("/home/sarra/Desktop/Github/databases/graph.db");
         modelToGraph.insertRepository(repository);
     }
 

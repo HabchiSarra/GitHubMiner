@@ -1,4 +1,7 @@
 package model;
+
+import java.util.HashMap;
+
 /**
  * Created by sarra on 27/03/17.
  */
@@ -7,7 +10,7 @@ public class IssueLabel {
     Long ID;
     boolean isDefault;
     Issue issue;
-
+    private static HashMap<Long,IssueLabel> issueLabels =new HashMap<>();
     private IssueLabel(String name, Long ID, boolean isDefault, Issue issue) {
         this.name = name;
         this.ID = ID;
@@ -17,7 +20,11 @@ public class IssueLabel {
 
 
     public static IssueLabel createIssueLabel(String name, Long ID, boolean isDefault, Issue issue){
-        IssueLabel issueLabel=new IssueLabel(name,ID,isDefault,issue);
+        IssueLabel issueLabel;
+        if((issueLabel =issueLabels.get(ID))!=null){
+            return issueLabel;
+        }
+        issueLabel=new IssueLabel(name,ID,isDefault,issue);
         issue.addLabel(issueLabel);
         return issueLabel;
     }

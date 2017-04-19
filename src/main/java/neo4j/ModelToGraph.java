@@ -3,10 +3,9 @@ package neo4j;
 import model.*;
 import org.neo4j.graphdb.*;
 
-import javax.management.relation.RelationType;
 import java.text.SimpleDateFormat;
-import java.util.Date;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.Map;
 
 
@@ -19,7 +18,8 @@ public  class ModelToGraph {
     private static final Label fileModificationLabel = DynamicLabel.label("FileModification");
     private static final Label issueLabel = DynamicLabel.label("Issue");
     private static final Label pullRequestLabel = DynamicLabel.label("PullRequest");
-
+    private static final Label issueCommentLabel = DynamicLabel.label("IssueComment");
+    private static final Label issueLabelLabel = DynamicLabel.label("IssueLabel");
 
     private Map<Developer,Node> developerNodeMap;
     private Map<Commit,Node> commitNodeMap;
@@ -48,8 +48,10 @@ public  class ModelToGraph {
             repoNode.setProperty("pushed_at",simpleDateFormat.format(repository.getPushDate()));
             Node ownerNode= insertDeveloper(repository.getOwner());
             ownerNode.createRelationshipTo(repoNode,RelationTypes.OWNS);
-
-            for(Commit commit: repository.getCommits()){
+            Iterator it = repository.getCommits().entrySet().iterator();
+            Commit commit;
+            while(it.hasNext()){
+                commit=(Commit) it.next();
                 repoNode.createRelationshipTo(insertCommit(commit),RelationTypes.HAS_COMMIT);
             }
 
@@ -116,8 +118,8 @@ public  class ModelToGraph {
                 Node authorNode = insertDeveloper(commit.getAuthor());
                 authorNode.createRelationshipTo(commitNode, RelationTypes.AUTHORED);
             }
-            if(commit.getCommiter()!=null) {
-                Node committerNode = insertDeveloper(commit.getCommiter());
+            if(commit.getCommitter()!=null) {
+                Node committerNode = insertDeveloper(commit.getCommitter());
                 committerNode.createRelationshipTo(commitNode, RelationTypes.COMMITTED);
             }
             for(FileModification fileModification: commit.getFileModifications()){
@@ -164,9 +166,23 @@ public  class ModelToGraph {
             issueNode.setProperty("body",issue.getBody());
             issueNode.setProperty("state",issue.getState().toString().toLowerCase());
             if(issue.getPullRequest()!=null){
-                pullRequestNode=insertPullRequest(issue.getPullRequest());
+                pullRequestNode=insertPullRequest(issue.getPullRequest(), repoNode);
                 issueNode.createRelationshipTo(pullRequestNode,RelationTypes.HAS_PULL_REQUEST);
             }
+
+            for(IssueComment issueComment: issue.getComments()){
+                issueNode.createRelationshipTo(insertComment(issueComment),RelationTypes.HAS_COMMENT);
+            }
+            for(IssueLabel issueLabel: issue.getLabels()){
+                issueNode.createRelationshipTo(insertLabel(issueLabel),RelationTypes.HAS_LABEL);
+            }
+
+            if(issue.getAssignee()!=null){
+                issueNode.createRelationshipTo(insertDeveloper(issue.getAssignee()),RelationTypes.ASSIGNED_TO);
+            }
+
+
+
             tx.success();
         }
         try ( Transaction tx = graphDatabaseService.beginTx() ){
@@ -175,10 +191,11 @@ public  class ModelToGraph {
         return issueNode;
     }
 
-    public Node insertPullRequest(PullRequest pullRequest){
+    public Node insertPullRequest(PullRequest pullRequest, Node repoNode){
         Node pullRequestNode;
         try ( Transaction tx = graphDatabaseService.beginTx() ){
             pullRequestNode = graphDatabaseService.createNode(pullRequestLabel);
+            repoNode.createRelationshipTo(pullRequestNode,RelationTypes.HAS_PULL_REQUEST);
             pullRequestNode.setProperty("id",pullRequest.getID());
             pullRequestNode.setProperty("additions",pullRequest.getAdditions());
             pullRequestNode.setProperty("deletions",pullRequest.getDeletions());
@@ -213,6 +230,47 @@ public  class ModelToGraph {
         }
         return pullRequestNode;
     }
+
+
+    public Node insertComment(IssueComment issueComment){
+        Node commentNode;
+
+        try ( Transaction tx = graphDatabaseService.beginTx() ){
+            commentNode = graphDatabaseService.createNode(issueCommentLabel);
+            commentNode.setProperty("id",issueComment.getId());
+            commentNode.setProperty("body",issueComment.getBody());
+            SimpleDateFormat simpleDateFormat = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss'Z'");
+            commentNode.setProperty("created_at",simpleDateFormat.format(issueComment.getCreatedAt()));
+            if(issueComment.getUpdateAt()!=null){
+                commentNode.setProperty("updated_at",simpleDateFormat.format(issueComment.getUpdateAt()));
+            }
+            if(issueComment.getCommenter()!=null){
+                insertDeveloper(issueComment.getCommenter()).createRelationshipTo(commentNode,RelationTypes.WRITES_COMMENT);
+            }
+            tx.success();
+        }
+        try ( Transaction tx = graphDatabaseService.beginTx() ){
+            tx.success();
+        }
+        return commentNode;
+    }
+
+    public Node insertLabel(IssueLabel issueLabel){
+        Node labelNode;
+
+        try ( Transaction tx = graphDatabaseService.beginTx() ){
+            labelNode = graphDatabaseService.createNode(issueLabelLabel);
+            labelNode.setProperty("id",issueLabel.getID());
+            labelNode.setProperty("name",issueLabel.getName());
+            labelNode.setProperty("default",issueLabel.isDefault());
+            tx.success();
+        }
+        try ( Transaction tx = graphDatabaseService.beginTx() ){
+            tx.success();
+        }
+        return labelNode;
+    }
+
 
 
 

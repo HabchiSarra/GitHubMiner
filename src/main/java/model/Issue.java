@@ -40,6 +40,9 @@ public class Issue {
         this.closedAt = closedAt;
         this.pullRequest = null;
         this.milestone = null;
+        this.comments=new ArrayList<>();
+        this.labels=new ArrayList<>();
+        this.events=new ArrayList<>();
     }
 
     public static Issue createIssue(Repository repository, Developer creator, Developer assignee, Long number, Long id, String title, String body,

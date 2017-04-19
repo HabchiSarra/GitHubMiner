@@ -17,6 +17,8 @@ public class Developer {
     private ArrayList<Issue> createdIssues;
     private ArrayList<Issue> assignedIssues;
     private ArrayList<IssueComment> issueComments;
+    private ArrayList<PullRequestCommit> pullRequestCommits;
+
 
     public static HashMap<Long,Developer> developersMap =new HashMap<>();
 
@@ -30,6 +32,7 @@ public class Developer {
         this.assignedIssues=new ArrayList<>();
         this.milestones =new HashMap<>();
         this.issueComments=new ArrayList<>();
+        this.pullRequestCommits = new ArrayList<>();
     }
 
     public static Developer createDeveloper(String login, Long ID){
@@ -144,6 +147,14 @@ public class Developer {
 
     public void addIssueComment(IssueComment issueComment){
         this.issueComments.add(issueComment);
+    }
+
+    public ArrayList<PullRequestCommit> getPullRequestCommits() {
+        return pullRequestCommits;
+    }
+
+    public void addPullRequestCommit(PullRequestCommit pullRequestCommit) {
+        this.pullRequestCommits.add(pullRequestCommit);
     }
 
     public void setIssueComments(ArrayList<IssueComment> issueComments) {

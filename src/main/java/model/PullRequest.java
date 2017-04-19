@@ -22,7 +22,7 @@ public class PullRequest {
     int changedFiles;
     boolean maintainerCanModify;
     Issue issue;
-    ArrayList<Commit> commits;
+    ArrayList<PullRequestCommit> commits;
     ArrayList<IssueComment> ReviewComments;
 
     private PullRequest(Repository repository, Long ID, Date createdAT, Date updatedAt, Date closedAT, int additions,Boolean mergeable,
@@ -177,12 +177,12 @@ public class PullRequest {
         this.issue = issue;
     }
 
-    public ArrayList<Commit> getCommits() {
+    public ArrayList<PullRequestCommit> getCommits() {
         return commits;
     }
 
-    public void setCommits(ArrayList<Commit> commits) {
-        this.commits = commits;
+    public void addCommit(PullRequestCommit commit) {
+        this.commits.add(commit);
     }
 
     public ArrayList<IssueComment> getReviewComments() {

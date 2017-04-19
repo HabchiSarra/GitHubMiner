@@ -45,8 +45,8 @@ public class Fetcher {
         owner.setMail(ownerJson.getString("url"));
         Repository repository=Repository.createRepository(ID, name,owner,description,
                 stargazersCount,watchersCount,commitDate,pushDate);
-        getRepoCommits(repository);
-        repository.setCollaborators(getCollaborators(repository));
+//        getRepoCommits(repository);
+//        repository.setCollaborators(getCollaborators(repository));
         getIssues(repository);
 
         return repository;
@@ -402,7 +402,7 @@ public class Fetcher {
                 mergeable, pullRequestObject.getInt("deletions"), pullRequestObject.getInt("changed_files"),
                 pullRequestObject.getBoolean("maintainer_can_modify"),issue, pullRequestObject.getBoolean("merged"));
 
-        linkPullRequestCommits(pullRequest);
+        //linkPullRequestCommits(pullRequest);
         //TODO add merge data
         return pullRequest;
     }
@@ -424,9 +424,9 @@ public class Fetcher {
             jsonObject=(JSONObject) iterator.next();
             sha=jsonObject.getString("sha");
             if((commit = pullRequest.getRepository().getCommits().get(sha))!=null){
-                pullRequest.getCommits().add(commit);
+                System.out.println("PBLM");
             }else{
-                System.out.println("Pull request commit not found");
+
             }
 
         }
