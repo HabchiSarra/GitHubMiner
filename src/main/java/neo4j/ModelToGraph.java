@@ -41,18 +41,17 @@ public  class ModelToGraph {
             repoNode = graphDatabaseService.createNode(repositoryLabel);
             repoNode.setProperty("name",repository.getName());
             repoNode.setProperty("id",repository.getID());
-            repoNode.setProperty("stargazers_count=",repository.getStargazersCount());
+            repoNode.setProperty("stargazers_count",repository.getStargazersCount());
             repoNode.setProperty("watchers_count",repository.getWatchersCount());
             SimpleDateFormat simpleDateFormat = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss'Z'");
             repoNode.setProperty("committed_at",simpleDateFormat.format(repository.getCommitDate()));
             repoNode.setProperty("pushed_at",simpleDateFormat.format(repository.getPushDate()));
             Node ownerNode= insertDeveloper(repository.getOwner());
             ownerNode.createRelationshipTo(repoNode,RelationTypes.OWNS);
-            Iterator it = repository.getCommits().entrySet().iterator();
-            Commit commit;
-            while(it.hasNext()){
-                commit=(Commit) it.next();
+
+            for(Commit commit: repository.getCommits().values()){
                 repoNode.createRelationshipTo(insertCommit(commit),RelationTypes.HAS_COMMIT);
+                System.out.println("commit inserted");
             }
 
             for(Developer developer:repository.getCollaborators()){
@@ -82,7 +81,7 @@ public  class ModelToGraph {
             developerNode.setProperty("id",developer.getID());
             if(developer.getMail()!=null)
             {
-                developerNode.setProperty("mail=",developer.getMail());
+                developerNode.setProperty("mail",developer.getMail());
             }
 
             tx.success();

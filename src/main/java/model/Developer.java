@@ -2,6 +2,7 @@ package model;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.Map;
 
 /**
  * Created by sarra on 13/02/17.
@@ -20,8 +21,8 @@ public class Developer {
     private ArrayList<PullRequestCommit> pullRequestCommits;
 
 
-    public static HashMap<Long,Developer> developersMap =new HashMap<>();
-
+    public static Map<Long,Developer> developersMap =new HashMap<>();
+    public static Map<String, Developer> gitDevelopersMap = new HashMap<>();
     private Developer(String login, Long ID) {
         this.login = login;
         this.ID = ID;
@@ -37,6 +38,28 @@ public class Developer {
 
     public static Developer createDeveloper(String login, Long ID){
         Developer developer;
+        if((developer =developersMap.get(ID))!=null){
+            return  developer;
+        }
+        developer=new Developer(login, ID);
+        developersMap.put(ID,developer);
+        return developer;
+    }
+
+    public static Developer createDeveloper(String login, Long ID, String mail){
+        Developer developer;
+        if(ID.equals(new Long(0))){
+            //it's a git developer
+            if((developer =gitDevelopersMap.get(mail)) !=null){
+                return developer;
+            }else{
+                ID = new Long(-gitDevelopersMap.size()-1);
+                developer=new Developer(login,ID);
+                developer.setMail(mail);
+                gitDevelopersMap.put(mail, developer);
+                return developer;
+            }
+        }
         if((developer =developersMap.get(ID))!=null){
             return  developer;
         }
@@ -125,7 +148,7 @@ public class Developer {
         this.assignedIssues.add(issue);
     }
 
-    public static HashMap<Long, Developer> getDevelopersMap() {
+    public static Map<Long, Developer> getDevelopersMap() {
         return developersMap;
     }
 

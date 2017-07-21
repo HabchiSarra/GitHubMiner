@@ -8,6 +8,7 @@ import org.apache.http.impl.client.DefaultHttpClient;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
+import org.neo4j.cypher.internal.frontend.v2_3.ast.functions.Str;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -45,9 +46,9 @@ public class Fetcher {
         owner.setMail(ownerJson.getString("url"));
         Repository repository=Repository.createRepository(ID, name,owner,description,
                 stargazersCount,watchersCount,commitDate,pushDate);
-//        getRepoCommits(repository);
-//        repository.setCollaborators(getCollaborators(repository));
-        getIssues(repository);
+        getRepoCommits(repository);
+        //repository.setCollaborators(getCollaborators(repository));
+        //getIssues(repository);
 
         return repository;
     }
@@ -106,12 +107,16 @@ public class Fetcher {
                 if (statusCode != 200) {
                     return ;
                 }
-                numberOfPages = Integer.valueOf(response.getAllHeaders()[15].getElements()[1].getValue().split(">")[0]);
+                if(response.getHeaders("Link")!=null && response.getHeaders("Link").length>0){
+                    numberOfPages = Integer.valueOf(response.getHeaders("Link")[0].getElements()[1].
+                            getValue().split("&")[0].split(">")[0]);
+                }else{
+                    numberOfPages=1;
+                }
                 HttpEntity entity = response.getEntity();
                 if (entity != null) {
                     InputStream instream = entity.getContent();
                     result = Converter.streamToString(instream);
-                    //System.out.println("RESULT:: "+ result);
                     instream.close();
                 }
 
@@ -121,14 +126,9 @@ public class Fetcher {
                 Iterator<Object> iterator = jsonArray.iterator();
                 while (iterator.hasNext()) {
                     jsonObject = (JSONObject) iterator.next();
-                    sha = jsonObject.getString("sha");
-                    getCommit(repository, sha);
+                    getCommit(repository, jsonObject);
+//                    System.out.println("commit fetched");
                 }
-                // Headers
-//            org.apache.http.Header[] headers = response.getAllHeaders();
-//            for (int i = 0; i < headers.length; i++) {
-//                //System.out.println(headers[i]);
-//            }
             } catch (ClientProtocolException e1) {
                 e1.printStackTrace();
             } catch (IOException e1) {
@@ -138,71 +138,89 @@ public class Fetcher {
 
     }
 
-    public  Commit getCommit(Repository repository, String sha){
-        String link = "https://api.github.com/repos/"+repository.getOwner().getLogin()+"/"+repository.getName()+"/commits"+"/"+sha;
-        String result=getData(link);
-        JSONObject jsonObject = new JSONObject(result);
-        String message =jsonObject.getJSONObject("commit").getString("message");
+    public  Commit getCommit(Repository repository, JSONObject commitObject){
+        String message =commitObject.getJSONObject("commit").getString("message");
         JSONObject jsonAuthor=null;
         JSONObject jsonCommitter = null ;
-        String d1; String d2;
+        String d1; String d2; String mailAuthor=null;
+        String mailCommitter=null; String nameAuthor = null;
+        String sha=commitObject.getString("sha");
         Date authoringDate=null;Date commitDate=null;
-        try {
-            jsonAuthor=jsonObject.getJSONObject("author");
-            d1 =jsonObject.getJSONObject("commit").getJSONObject("author").getString("date");
-            authoringDate =Converter.stringToDate(d1);
 
-        }catch (JSONException e ){
-            e.printStackTrace();
-        }
-        try {
-            jsonCommitter=jsonObject.getJSONObject("committer");
-            d2 =jsonObject.getJSONObject("commit").getJSONObject("committer").getString("date");
-            commitDate=Converter.stringToDate(d2);
-        }catch (JSONException e ){
-            e.printStackTrace();
-        }
-        Developer author=null;
-        Developer committer=null;
-        if(jsonAuthor!=null)
-        {
-            author=Developer.createDeveloper(jsonAuthor.getString("login"),jsonAuthor.getLong("id"));
-            if(committer !=null){
-                if(jsonAuthor.getLong("id")!= jsonCommitter.getLong("id")){
-                    committer= Developer.createDeveloper(jsonCommitter.getString("login"),jsonCommitter.getLong("id"));
-                }else{
-                    committer=author;
+        //getting git data
+        if(commitObject.has("commit")){
+            if(commitObject.getJSONObject("commit").has("author")){
+                jsonAuthor = commitObject.getJSONObject("commit").getJSONObject("author");
+                if(jsonAuthor.has("date")) {
+                    d1 = jsonAuthor.getString("date");
+                    authoringDate = Converter.stringToDate(d1);
+                }
+                if(jsonAuthor.has("email")){
+                    mailAuthor=jsonAuthor.getString("email");
+                }
+                if(jsonAuthor.has("name")){
+                    nameAuthor=jsonAuthor.getString("name");
                 }
             }
-        }else{
-            if(committer!=null){
-                committer= Developer.createDeveloper(jsonCommitter.getString("login"),jsonCommitter.getLong("id"));
+            if(commitObject.getJSONObject("commit").has("committer")){
+                jsonCommitter = commitObject.getJSONObject("commit").getJSONObject("committer");
+                if(jsonCommitter.has("date")) {
+                    d1 = jsonCommitter.getString("date");
+                    commitDate = Converter.stringToDate(d1);
+                }
+                if(jsonCommitter.has("email")){
+                    mailCommitter=jsonAuthor.getString("email");
+                }
             }
         }
+        Developer author;
+        Developer committer=null;
+        //getting Github data
+        if(commitObject.has("author") &&commitObject.get("author")!=JSONObject.NULL){
 
-        Commit commit=Commit.createCommit(sha,author,committer,message,authoringDate,commitDate, repository);
+                jsonAuthor=commitObject.getJSONObject("author");
+                author=Developer.createDeveloper(jsonAuthor.getString("login"),jsonAuthor.getLong("id"));
+                author.setMail(mailAuthor);
+
+        }else{
+            if(nameAuthor==null)
+            {
+                nameAuthor="UNKNOWN";
+                System.err.println("Author not found for commit"+ sha);
+            }
+            author=Developer.createDeveloper(nameAuthor,new Long(0),mailAuthor);
+        }
+
+        if(commitObject.has("committer")){
+            jsonCommitter=commitObject.getJSONObject("committer");
+            committer=Developer.createDeveloper(jsonCommitter.getString("login"),jsonCommitter.getLong("id"));
+            committer.setMail(mailCommitter);
+        }
+
+       Commit commit=Commit.createCommit(sha,author,committer,message,authoringDate,commitDate, repository);
         //Getting files
-        JSONArray jsonFiles =jsonObject.getJSONArray("files");
-        int additions, deletions; String patch, fileName, status;
-        JSONObject jsonFile;
-        Iterator<Object> iterator=jsonFiles.iterator();
-        while(iterator.hasNext()){
-            jsonFile=(JSONObject) iterator.next();
-            fileName=jsonFile.getString("filename");
-            additions=jsonFile.getInt("additions");
-            deletions=jsonFile.getInt("deletions");
-            status=jsonFile.getString("status");
-            FileStatus fileStatus= Converter.stringToFileStatus(status);
+//        JSONArray jsonFiles =commitObject.getJSONArray("files");
+//        int additions, deletions; String patch, fileName, status;
+//        JSONObject jsonFile;
+//        Iterator<Object> iterator=jsonFiles.iterator();
+//        while(iterator.hasNext()){
+//            jsonFile=(JSONObject) iterator.next();
+//            fileName=jsonFile.getString("filename");
+//            additions=jsonFile.getInt("additions");
+//            deletions=jsonFile.getInt("deletions");
+//            status=jsonFile.getString("status");
+//            FileStatus fileStatus= Converter.stringToFileStatus(status);
 //            try{
 //                patch = jsonFile.getString("patch");
 //            }catch (JSONException jsonException){
 //                jsonException.printStackTrace();
 //            }
-            String shaFile =jsonFile.getString("sha");
 
-            commit.addFileModification(new FileModification(additions,deletions,fileName,fileStatus,shaFile));
+//            String shaFile =jsonFile.getString("sha");
+//
+//            commit.addFileModification(new FileModification(additions,deletions,fileName,fileStatus,shaFile));
 
-        }
+//        }
         return commit;
     }
 
@@ -262,12 +280,16 @@ public class Fetcher {
                 if (statusCode != 200) {
                     return ;
                 }
-                numberOfPages = Integer.valueOf(response.getAllHeaders()[14].getElements()[1].getValue().split("&")[0]);
-                HttpEntity entity = response.getEntity();
+                if(response.getHeaders("Link")!=null && response.getHeaders("Link").length>0){
+                    numberOfPages = Integer.valueOf(response.getHeaders("Link")[0].getElements()[1].
+                            getValue().split("&")[0]);
+                }else{
+                    numberOfPages=1;
+                }
+                 HttpEntity entity = response.getEntity();
                 if (entity != null) {
                     InputStream instream = entity.getContent();
                     result = Converter.streamToString(instream);
-                    //System.out.println("RESULT:: "+ result);
                     instream.close();
                 }
 
