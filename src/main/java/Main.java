@@ -3,29 +3,57 @@
  */
 
 import model.Repository;
+import neo4j.CommitsQuery;
 import neo4j.ModelToGraph;
+import neo4j.QueryEngine;
+import net.sourceforge.argparse4j.ArgumentParsers;
+import net.sourceforge.argparse4j.inf.*;
 
-import java.util.Scanner;
-
-
+import java.io.IOException;
 
 public class Main {
 
-
     public static void main(String[] args){
 
-        Scanner scanner=new Scanner(System.in);
-        System.out.println("The token: ");
-        String token = "";
-                //scanner.next();
-        System.out.println("The repository link: ");
+        ArgumentParser parser = ArgumentParsers.newArgumentParser("GitMiner");
+        Subparsers subparsers = parser.addSubparsers().dest("sub_command");
+        Subparser analyseParser = subparsers.addParser("getCommits").help("get commits");
 
-        String link ="https://api.github.com/repos/INRIA/spoon";
-                //scanner.next();
+        analyseParser.addArgument("-k", "--token").required(true).help("Github token");
+        analyseParser.addArgument("-l", "--link").required(true).help("repository link in the api");
+        analyseParser.addArgument("-d", "--database").required(true).help("the database path");
+        try {
+            Namespace res = parser.parseArgs(args);
+            if(res.getString("sub_command").equals("getCommits")){
+                getCommits(res);
+            }
+
+        } catch (ArgumentParserException e) {
+            analyseParser.handleError(e);
+        }
+        catch (Exception e) {
+            e.printStackTrace();
+        }
+
+
+    }
+
+    public static void getCommits(Namespace arg){
+        String link = arg.getString("link");
+        String databasePath = arg.getString("database");
+        String token = arg.getString("token");
         ContentFetcher fetcher=new ContentFetcher(token);
         Repository repository=fetcher.getRepository(link);
-        ModelToGraph modelToGraph =new ModelToGraph("/home/sarra/Desktop/Github/databases/graph.db");
+        ModelToGraph modelToGraph =new ModelToGraph(databasePath);
         modelToGraph.insertRepository(repository);
+        QueryEngine queryEngine=new QueryEngine(databasePath);
+        CommitsQuery commitsQuery = CommitsQuery.createCommitsQuery(queryEngine);
+        try {
+            commitsQuery.execute();
+        }catch (IOException e) {
+            e.printStackTrace();
+        }
+
     }
 
 
