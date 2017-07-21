@@ -1,11 +1,9 @@
-/**
- * Created by sarra on 03/02/17.
- */
+package org.tandoori.gitminer;
 
-import model.Repository;
-import neo4j.CommitsQuery;
-import neo4j.ModelToGraph;
-import neo4j.QueryEngine;
+import org.tandoori.gitminer.model.Repository;
+import org.tandoori.gitminer.neo4j.CommitsQuery;
+import org.tandoori.gitminer.neo4j.ModelToGraph;
+import org.tandoori.gitminer.neo4j.QueryEngine;
 import net.sourceforge.argparse4j.ArgumentParsers;
 import net.sourceforge.argparse4j.inf.*;
 

@@ -1,4 +1,4 @@
-package neo4j;
+package org.tandoori.gitminer.neo4j;
 
 import java.io.File;
 import org.neo4j.graphdb.GraphDatabaseService;

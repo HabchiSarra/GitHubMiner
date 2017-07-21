@@ -1,6 +1,7 @@
+package org.tandoori.gitminer;
 
-import model.Commit;
-import model.FileModification;
+import org.tandoori.gitminer.model.Commit;
+import org.tandoori.gitminer.model.FileModification;
 
 /**
  * Created by sarra on 24/02/17.

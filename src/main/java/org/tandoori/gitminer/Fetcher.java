@@ -1,4 +1,6 @@
-import model.*;
+package org.tandoori.gitminer;
+
+import org.tandoori.gitminer.model.*;
 import org.apache.http.HttpEntity;
 import org.apache.http.HttpResponse;
 import org.apache.http.client.ClientProtocolException;
@@ -6,9 +8,7 @@ import org.apache.http.client.HttpClient;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.impl.client.DefaultHttpClient;
 import org.json.JSONArray;
-import org.json.JSONException;
 import org.json.JSONObject;
-import org.neo4j.cypher.internal.frontend.v2_3.ast.functions.Str;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -209,7 +209,7 @@ public class Fetcher {
 //            additions=jsonFile.getInt("additions");
 //            deletions=jsonFile.getInt("deletions");
 //            status=jsonFile.getString("status");
-//            FileStatus fileStatus= Converter.stringToFileStatus(status);
+//            FileStatus fileStatus= org.tandoori.gitminer.Converter.stringToFileStatus(status);
 //            try{
 //                patch = jsonFile.getString("patch");
 //            }catch (JSONException jsonException){

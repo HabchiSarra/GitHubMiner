@@ -1,11 +1,10 @@
-package neo4j;
+package org.tandoori.gitminer.neo4j;
 
-import model.*;
+import org.tandoori.gitminer.model.*;
 import org.neo4j.graphdb.*;
 
 import java.text.SimpleDateFormat;
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.Map;
 
 

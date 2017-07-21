@@ -1,4 +1,4 @@
-package model;
+package org.tandoori.gitminer.model;
 /**
  * Created by sarra on 15/02/17.
  */

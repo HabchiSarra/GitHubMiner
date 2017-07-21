@@ -1,4 +1,4 @@
-package neo4j;
+package org.tandoori.gitminer.neo4j;
 
 import org.neo4j.cypher.CypherException;
 import org.neo4j.graphdb.Result;

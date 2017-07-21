@@ -1,4 +1,4 @@
-package model;
+package org.tandoori.gitminer.model;
 
 import java.util.Date;
 

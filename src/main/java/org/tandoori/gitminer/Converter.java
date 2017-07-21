@@ -1,6 +1,7 @@
+package org.tandoori.gitminer;
 
-import model.FileStatus;
-import model.State;
+import org.tandoori.gitminer.model.FileStatus;
+import org.tandoori.gitminer.model.State;
 
 import java.io.BufferedReader;
 import java.io.IOException;

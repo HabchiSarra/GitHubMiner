@@ -31,7 +31,7 @@
                     <archive>
                         <manifest>
                             <!-- Jar file entry point -->
-                            <mainClass>Main</mainClass>
+                            <mainClass>org.tandoori.gitminer.Main</mainClass>
                         </manifest>
                     </archive>
                 </configuration>
