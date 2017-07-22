@@ -50,7 +50,7 @@ public  class ModelToGraph {
 
             for(Commit commit: repository.getCommits().values()){
                 repoNode.createRelationshipTo(insertCommit(commit),RelationTypes.HAS_COMMIT);
-                System.out.println("commit inserted");
+//                System.out.println("commit inserted");
             }
 
             for(Developer developer:repository.getCollaborators()){
@@ -269,9 +269,11 @@ public  class ModelToGraph {
         return labelNode;
     }
 
-
-
-
-
-
+    /**
+     * This method closes the {@link DatabaseManager},
+     * in order to make the neo4j database available again.
+     */
+    public void closeDB() {
+        databaseManager.shutDown();
+    }
 }

@@ -44,6 +44,9 @@ public class Main {
         Repository repository=fetcher.getRepository(link);
         ModelToGraph modelToGraph =new ModelToGraph(databasePath);
         modelToGraph.insertRepository(repository);
+        modelToGraph.closeDB();
+
+        // Retrieve the developers and save them as CSV
         QueryEngine queryEngine=new QueryEngine(databasePath);
         CommitsQuery commitsQuery = CommitsQuery.createCommitsQuery(queryEngine);
         try {
