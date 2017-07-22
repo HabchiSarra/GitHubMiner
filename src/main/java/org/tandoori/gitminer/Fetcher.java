@@ -142,8 +142,9 @@ public class Fetcher {
         String message =commitObject.getJSONObject("commit").getString("message");
         JSONObject jsonAuthor=null;
         JSONObject jsonCommitter = null ;
-        String d1; String d2; String mailAuthor=null;
-        String mailCommitter=null; String nameAuthor = null;
+        String d1; String d2;
+        String mailCommitter=null; String nameCommitter= null;
+        String mailAuthor=null; String nameAuthor = null;
         String sha=commitObject.getString("sha");
         Date authoringDate=null;Date commitDate=null;
 
@@ -169,15 +170,17 @@ public class Fetcher {
                     commitDate = Converter.stringToDate(d1);
                 }
                 if(jsonCommitter.has("email")){
-                    mailCommitter=jsonAuthor.getString("email");
+                    mailCommitter=jsonCommitter.getString("email");
+                }
+                if (jsonCommitter.has("name")) {
+                    nameCommitter = jsonCommitter.getString("name");
                 }
             }
         }
         Developer author;
         Developer committer=null;
         //getting Github data
-        if(commitObject.has("author") &&commitObject.get("author")!=JSONObject.NULL){
-
+        if(commitObject.has("author") && commitObject.get("author")!=JSONObject.NULL){
                 jsonAuthor=commitObject.getJSONObject("author");
                 author=Developer.createDeveloper(jsonAuthor.getString("login"),jsonAuthor.getLong("id"));
                 author.setMail(mailAuthor);
@@ -191,10 +194,16 @@ public class Fetcher {
             author=Developer.createDeveloper(nameAuthor,new Long(0),mailAuthor);
         }
 
-        if(commitObject.has("committer")){
+        if(commitObject.has("committer") && commitObject.get("committer") != JSONObject.NULL){
             jsonCommitter=commitObject.getJSONObject("committer");
             committer=Developer.createDeveloper(jsonCommitter.getString("login"),jsonCommitter.getLong("id"));
             committer.setMail(mailCommitter);
+        } else {
+            if(nameCommitter==null) {
+                nameCommitter="UNKNOWN";
+                System.err.println("Committer not found for commit" + sha);
+            }
+            author=Developer.createDeveloper(nameCommitter,0L, mailAuthor);
         }
 
        Commit commit=Commit.createCommit(sha,author,committer,message,authoringDate,commitDate, repository);
