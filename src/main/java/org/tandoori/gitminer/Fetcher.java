@@ -94,7 +94,7 @@ public class Fetcher {
         while(actualPage<numberOfPages) {
             actualPage++;
             link = "https://api.github.com/repos/" + repository.getOwner().getLogin() + "/" + repository.getName() + "/commits";
-            link = link + "?page=" + (actualPage);
+            link = link + "?page=" + (actualPage) + "&per_page=100";
             HttpClient client = new DefaultHttpClient();
             HttpGet request = new HttpGet(link);
             request.addHeader("Authorization", " token " + token);
