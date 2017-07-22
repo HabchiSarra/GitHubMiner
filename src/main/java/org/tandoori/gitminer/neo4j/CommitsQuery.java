@@ -22,7 +22,7 @@ public class CommitsQuery extends Query {
     @Override
     public void execute() throws CypherException, IOException {
         try (Transaction ignored = graphDatabaseService.beginTx()) {
-            String query = "match(d:Developer)-[:AUTHORED]->(c:Commit) where d.id<0 " +
+            String query = "match(d:Developer)-[:AUTHORED]->(c:Commit) " +
                     "return c.sha as key, d.login as login, d.id as id, d.mail as mail";
 
             Result result = graphDatabaseService.execute(query);

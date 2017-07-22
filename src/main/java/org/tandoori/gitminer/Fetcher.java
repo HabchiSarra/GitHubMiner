@@ -203,7 +203,7 @@ public class Fetcher {
                 nameCommitter="UNKNOWN";
                 System.err.println("Committer not found for commit" + sha);
             }
-            author=Developer.createDeveloper(nameCommitter,0L, mailAuthor);
+            committer=Developer.createDeveloper(nameCommitter,0L, mailCommitter);
         }
 
        Commit commit=Commit.createCommit(sha,author,committer,message,authoringDate,commitDate, repository);
