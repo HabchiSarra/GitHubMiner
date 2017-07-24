@@ -28,6 +28,11 @@
 
 # IntelliJ
 /out/
+*.iml
+
+# Maven
+/target/
+dependency-reduced-pom.xml
 
 # mpeltonen/sbt-idea plugin
 .idea_modules/
