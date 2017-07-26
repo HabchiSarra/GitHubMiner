@@ -180,7 +180,8 @@ public class Fetcher {
         Developer author;
         Developer committer=null;
         //getting Github data
-        if(commitObject.has("author") && commitObject.get("author")!=JSONObject.NULL){
+        // Avoiding non-github and anonymous authors
+        if(commitObject.has("author") && commitObject.get("author")!=JSONObject.NULL && commitObject.getJSONObject("author").length() > 0){
                 jsonAuthor=commitObject.getJSONObject("author");
                 author=Developer.createDeveloper(jsonAuthor.getString("login"),jsonAuthor.getLong("id"));
                 author.setMail(mailAuthor);
@@ -194,7 +195,8 @@ public class Fetcher {
             author=Developer.createDeveloper(nameAuthor,new Long(0),mailAuthor);
         }
 
-        if(commitObject.has("committer") && commitObject.get("committer") != JSONObject.NULL){
+        // Avoiding non-github and anonymous committers
+        if(commitObject.has("committer") && commitObject.get("committer") != JSONObject.NULL && commitObject.getJSONObject("committer").length() > 0){
             jsonCommitter=commitObject.getJSONObject("committer");
             committer=Developer.createDeveloper(jsonCommitter.getString("login"),jsonCommitter.getLong("id"));
             committer.setMail(mailCommitter);
