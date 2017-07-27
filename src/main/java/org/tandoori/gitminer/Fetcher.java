@@ -21,6 +21,8 @@ import java.util.Iterator;
  */
 public class Fetcher {
 
+    private static final String PLACEHOLDER_EMAIL = "anonymous@localhost";
+
     public  String token ;
 
 
@@ -143,8 +145,8 @@ public class Fetcher {
         JSONObject jsonAuthor=null;
         JSONObject jsonCommitter = null ;
         String d1; String d2;
-        String mailCommitter=null; String nameCommitter= null;
-        String mailAuthor=null; String nameAuthor = null;
+        String mailCommitter = PLACEHOLDER_EMAIL; String nameCommitter= null;
+        String mailAuthor = PLACEHOLDER_EMAIL; String nameAuthor = null;
         String sha=commitObject.getString("sha");
         Date authoringDate=null;Date commitDate=null;
 
@@ -156,7 +158,8 @@ public class Fetcher {
                     d1 = jsonAuthor.getString("date");
                     authoringDate = Converter.stringToDate(d1);
                 }
-                if(jsonAuthor.has("email")){
+                if(jsonAuthor.has("email") && jsonAuthor.get("email")!= JSONObject.NULL &&
+                        !jsonAuthor.getString("email").isEmpty()){
                     mailAuthor=jsonAuthor.getString("email");
                 }
                 if(jsonAuthor.has("name")){
@@ -169,7 +172,8 @@ public class Fetcher {
                     d1 = jsonCommitter.getString("date");
                     commitDate = Converter.stringToDate(d1);
                 }
-                if(jsonCommitter.has("email")){
+                if(jsonCommitter.has("email") && jsonCommitter.get("email")!= JSONObject.NULL &&
+                        !jsonCommitter.getString("email").isEmpty()){
                     mailCommitter=jsonCommitter.getString("email");
                 }
                 if (jsonCommitter.has("name")) {

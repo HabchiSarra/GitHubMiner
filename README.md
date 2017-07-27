@@ -2,4 +2,4 @@
 
 ## Build
 
-To build the jar, use the command `mvn assembly:assembly`
+To build the jar, use the command `mvn package`
