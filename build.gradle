@@ -32,6 +32,8 @@ dependencies {
     compile group: 'org.json', name: 'json', version:'20170516'
 }
 
+apply plugin: 'application'
+mainClassName = "org.tandoori.gitminer.Main"
 
 apply plugin: "com.github.johnrengelman.shadow"
 shadowJar {
