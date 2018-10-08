@@ -1,7 +1,18 @@
-package org.tandoori.gitminer.neo4j;
+package fr.inria.sniffer.githubminer.neo4j;
 
-import org.tandoori.gitminer.model.*;
-import org.neo4j.graphdb.*;
+import fr.inria.sniffer.githubminer.model.Commit;
+import fr.inria.sniffer.githubminer.model.Developer;
+import fr.inria.sniffer.githubminer.model.FileModification;
+import fr.inria.sniffer.githubminer.model.Issue;
+import fr.inria.sniffer.githubminer.model.IssueComment;
+import fr.inria.sniffer.githubminer.model.IssueLabel;
+import fr.inria.sniffer.githubminer.model.PullRequest;
+import fr.inria.sniffer.githubminer.model.Repository;
+import org.neo4j.graphdb.DynamicLabel;
+import org.neo4j.graphdb.GraphDatabaseService;
+import org.neo4j.graphdb.Label;
+import org.neo4j.graphdb.Node;
+import org.neo4j.graphdb.Transaction;
 
 import java.text.SimpleDateFormat;
 import java.util.HashMap;
@@ -271,7 +282,7 @@ public  class ModelToGraph {
 
     /**
      * This method closes the {@link DatabaseManager},
-     * in order to make the neo4j database available again.
+     * in order to make the fr.inria.sniffer.detector.neo4j database available again.
      */
     public void closeDB() {
         databaseManager.shutDown();

@@ -1,7 +1,7 @@
-package org.tandoori.gitminer;
+package fr.inria.sniffer.githubminer;
 
-import org.tandoori.gitminer.model.FileStatus;
-import org.tandoori.gitminer.model.State;
+import fr.inria.sniffer.githubminer.model.FileStatus;
+import fr.inria.sniffer.githubminer.model.State;
 
 import java.io.BufferedReader;
 import java.io.IOException;

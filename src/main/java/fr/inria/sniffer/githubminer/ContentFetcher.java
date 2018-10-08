@@ -1,7 +1,7 @@
-package org.tandoori.gitminer;
+package fr.inria.sniffer.githubminer;
 
-import org.tandoori.gitminer.model.Commit;
-import org.tandoori.gitminer.model.FileModification;
+import fr.inria.sniffer.githubminer.model.Commit;
+import fr.inria.sniffer.githubminer.model.FileModification;
 
 /**
  * Created by sarra on 24/02/17.

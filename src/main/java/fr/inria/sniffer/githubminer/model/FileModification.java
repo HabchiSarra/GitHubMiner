@@ -1,4 +1,4 @@
-package org.tandoori.gitminer.model;
+package fr.inria.sniffer.githubminer.model;
 /**
  * Created by sarra on 15/02/17.
  */

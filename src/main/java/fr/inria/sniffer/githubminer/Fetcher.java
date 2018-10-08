@@ -1,6 +1,14 @@
-package org.tandoori.gitminer;
+package fr.inria.sniffer.githubminer;
 
-import org.tandoori.gitminer.model.*;
+import fr.inria.sniffer.githubminer.model.Commit;
+import fr.inria.sniffer.githubminer.model.Developer;
+import fr.inria.sniffer.githubminer.model.Issue;
+import fr.inria.sniffer.githubminer.model.IssueComment;
+import fr.inria.sniffer.githubminer.model.IssueLabel;
+import fr.inria.sniffer.githubminer.model.Milestone;
+import fr.inria.sniffer.githubminer.model.PullRequest;
+import fr.inria.sniffer.githubminer.model.Repository;
+import fr.inria.sniffer.githubminer.model.State;
 import org.apache.http.HttpEntity;
 import org.apache.http.HttpResponse;
 import org.apache.http.client.ClientProtocolException;
@@ -30,7 +38,7 @@ public class Fetcher {
         this.token=token;
     }
 
-    public  Repository getRepository(String link){
+    public Repository getRepository(String link){
         String result=getData(link);
         JSONObject jsonObject = new JSONObject(result);
         String name = jsonObject.getString("name");
@@ -140,7 +148,7 @@ public class Fetcher {
 
     }
 
-    public  Commit getCommit(Repository repository, JSONObject commitObject){
+    public Commit getCommit(Repository repository, JSONObject commitObject){
         String message =commitObject.getJSONObject("commit").getString("message");
         JSONObject jsonAuthor=null;
         JSONObject jsonCommitter = null ;
@@ -224,7 +232,7 @@ public class Fetcher {
 //            additions=jsonFile.getInt("additions");
 //            deletions=jsonFile.getInt("deletions");
 //            status=jsonFile.getString("status");
-//            FileStatus fileStatus= org.tandoori.gitminer.Converter.stringToFileStatus(status);
+//            FileStatus fileStatus= Converter.stringToFileStatus(status);
 //            try{
 //                patch = jsonFile.getString("patch");
 //            }catch (JSONException jsonException){

@@ -1,4 +1,4 @@
-package org.tandoori.gitminer.model;
+package fr.inria.sniffer.githubminer.model;
 
 import java.util.Date;
 

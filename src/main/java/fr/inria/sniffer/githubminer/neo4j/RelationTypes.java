@@ -1,4 +1,4 @@
-package org.tandoori.gitminer.neo4j;
+package fr.inria.sniffer.githubminer.neo4j;
 
 import org.neo4j.graphdb.RelationshipType;
 

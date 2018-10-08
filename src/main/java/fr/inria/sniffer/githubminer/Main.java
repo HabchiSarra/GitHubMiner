@@ -1,9 +1,9 @@
-package org.tandoori.gitminer;
+package fr.inria.sniffer.githubminer;
 
-import org.tandoori.gitminer.model.Repository;
-import org.tandoori.gitminer.neo4j.CommitsQuery;
-import org.tandoori.gitminer.neo4j.ModelToGraph;
-import org.tandoori.gitminer.neo4j.QueryEngine;
+import fr.inria.sniffer.githubminer.model.Repository;
+import fr.inria.sniffer.githubminer.neo4j.CommitsQuery;
+import fr.inria.sniffer.githubminer.neo4j.ModelToGraph;
+import fr.inria.sniffer.githubminer.neo4j.QueryEngine;
 import net.sourceforge.argparse4j.ArgumentParsers;
 import net.sourceforge.argparse4j.inf.*;
 

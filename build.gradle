@@ -11,7 +11,7 @@ buildscript {
 apply plugin: 'java'
 apply plugin: 'maven'
 
-group = 'org.tandoori.gitminer'
+group = 'fr.inria.sniffer.githubminer'
 version = '1.0-SNAPSHOT'
 
 description = """"""
@@ -33,7 +33,7 @@ dependencies {
 }
 
 apply plugin: 'application'
-mainClassName = "org.tandoori.gitminer.Main"
+mainClassName = "fr.inria.sniffer.githubminer.Main"
 
 apply plugin: "com.github.johnrengelman.shadow"
 shadowJar {

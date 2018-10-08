@@ -1,4 +1,4 @@
-package org.tandoori.gitminer.neo4j;
+package fr.inria.sniffer.githubminer.neo4j;
 
 import java.io.File;
 import org.neo4j.graphdb.GraphDatabaseService;
